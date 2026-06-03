@@ -1,0 +1,3206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PMERJ - Circulação de Viatura</title>
+<style>
+:root{--az:#1a3a6b;--azd:#0e2347;--dou:#c8a227;--douc:#f0d060;--ok:#155724;--bx:#721c24;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:"Segoe UI",Arial,sans-serif;background:#0e2347;color:#1a1a1a;min-height:100vh;position:relative;font-size:16px;}
+body::before{content:"";position:fixed;inset:0;background-image:url("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png/250px-Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png");background-repeat:no-repeat;background-position:center;background-size:380px;opacity:.07;pointer-events:none;z-index:0;}
+.wrap{max-width:700px;margin:0 auto;padding:.7rem;position:relative;z-index:1}
+
+/* LOGIN */
+.lw{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;position:relative;z-index:1;}
+.lcard{background:#fff;border-radius:14px;border:2px solid var(--dou);padding:28px 22px;width:100%;max-width:400px;position:relative;overflow:hidden;}
+.lcard::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--azd),var(--dou),var(--azd));}
+.lbrasao{width:76px;height:76px;background:url("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png/250px-Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png") center/contain no-repeat;margin:0 auto 8px;}
+.llogo{text-align:center;margin-bottom:16px}
+.llogo .l1{font-size:11px;color:#888;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.llogo .l2{font-size:14px;font-weight:700;color:var(--az);margin-top:3px}
+.llogo .l3{font-size:12px;font-weight:600;color:#444;margin-top:2px}
+.llogo .l4{font-size:11px;color:#777;margin-top:2px;font-style:italic}
+.ldiv{height:2px;background:linear-gradient(90deg,transparent,var(--dou),transparent);margin:14px 0}
+.rtabs{display:flex;border:2px solid var(--az);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.rtab{flex:1;padding:11px 4px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;background:#f5f7ff;color:var(--az);border:none;font-family:inherit;}
+.rtab.active{background:var(--az);color:#fff}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,#0e2347 0%,#1a3a6b 60%,#1e4a8a 100%);border:2px solid var(--dou);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;position:relative;overflow:hidden;}
+.hdr::after{content:"";position:absolute;top:0;right:0;bottom:0;width:4px;background:var(--dou);}
+.hbrasao{width:42px;height:42px;background:url("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png/250px-Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png") center/contain no-repeat;flex-shrink:0;}
+.hdrtxt .h1{font-size:9px;color:var(--douc);font-weight:600;letter-spacing:.4px}
+.hdrtxt .h2{font-size:12px;font-weight:700;color:#fff;margin-top:1px}
+.hdrtxt .h3{font-size:10px;color:rgba(255,255,255,.7);margin-top:1px}
+.hright{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.brole{background:var(--dou);color:#0e2347;font-size:10px;font-weight:700;padding:3px 9px;border-radius:4px;text-align:center;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bsair{background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:6px 11px;font-size:12px;cursor:pointer;color:#fff;font-family:inherit;}
+
+/* NAV */
+.nav{display:flex;gap:4px;margin-bottom:10px;background:var(--azd);border-radius:9px;padding:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.nav button{flex:1;min-width:70px;padding:9px 4px;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:transparent;cursor:pointer;font-size:11px;font-weight:600;color:rgba(255,255,255,.7);white-space:nowrap;font-family:inherit;}
+.nav button.active{background:var(--dou);color:#0e2347;border-color:var(--dou)}
+
+/* CARDS */
+.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:10px;border-top:3px solid var(--az);}
+.stitle{font-size:11px;font-weight:700;color:var(--az);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--dou);display:flex;align-items:center;gap:5px;}
+
+/* FORMS — mobile-first */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.fg.c1{grid-template-columns:1fr}
+.fg.c3{grid-template-columns:1fr 1fr 1fr}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:12px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:.3px}
+.f input,.f select,.f textarea{border:1.5px solid #ccc;border-radius:8px;padding:11px 12px;font-size:15px;background:#fff;color:#1a1a1a;width:100%;font-family:inherit;-webkit-appearance:none;}
+.f textarea{resize:vertical;min-height:90px;font-size:14px;}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--az);box-shadow:0 0 0 2px rgba(26,58,107,.12)}
+.f input[readonly]{background:#f0f7e6;border-color:#7cbf5a;color:#2d6a1a;font-weight:600}
+.hint{font-size:11px;color:#888;margin-top:2px;font-style:italic}
+.fcol{grid-column:1/-1}
+
+/* CHECKLIST */
+.ck-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+.ck-item{border:1.5px solid #ddd;border-radius:8px;padding:9px 10px;background:#f9f9f9;}
+.ck-item label{font-size:13px;font-weight:600;color:#333;display:block;margin-bottom:5px}
+.ck-item select{border:1px solid #ccc;border-radius:6px;padding:7px 8px;font-size:13px;width:100%;background:#fff;font-family:inherit;-webkit-appearance:none;}
+.ck-item select.ok{border-color:#7cbf5a;background:#f0f7e6;color:#2d6a1a;font-weight:600}
+.ck-item select.bx{border-color:#f09595;background:#fdf0f0;color:#a32d2d;font-weight:600}
+.ck-item select.na{border-color:#aaa;background:#f5f5f5;color:#666}
+
+/* ALT BOX */
+.alt-info{background:#fff8e6;border:1.5px solid var(--dou);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#5a3e00;line-height:1.6;}
+.alt-info strong{display:block;margin-bottom:3px;font-size:13px;color:#3a2800;}
+.alt-ta{border:2px solid var(--dou);border-radius:8px;padding:12px;font-size:14px;background:#fff;width:100%;min-height:95px;resize:vertical;font-family:inherit;color:#1a1a1a;}
+.alt-ta:focus{outline:none;border-color:var(--az);box-shadow:0 0 0 2px rgba(26,58,107,.12)}
+.alt-ta::placeholder{color:#bbb;font-style:italic;font-size:12px}
+
+/* FOTO */
+.foto-area{border:2px dashed var(--dou);border-radius:8px;padding:14px;text-align:center;cursor:pointer;color:var(--az);font-size:14px;margin-top:5px;background:#f5f7ff;display:flex;align-items:center;justify-content:center;gap:8px;}
+.foto-prev{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.fthumb{width:70px;height:70px;object-fit:cover;border-radius:6px;border:2px solid var(--dou)}
+
+/* BOTÕES */
+.btnp{background:var(--az);color:#fff;border:none;border-radius:8px;padding:14px 18px;font-size:15px;font-weight:700;cursor:pointer;width:100%;border-bottom:3px solid var(--azd);font-family:inherit;letter-spacing:.2px;min-height:50px;}
+.btnp:hover{background:#1e4a8a}.btnp:disabled{background:#aaa;border-bottom-color:#888;cursor:not-allowed}
+.btnp.bxbtn{background:#a32d2d;border-bottom-color:#721c24}
+.btns{background:#fff;border:1.5px solid #ccc;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;color:#333;font-family:inherit;}
+.btnd{background:#fff;border:1.5px solid #f09595;border-radius:7px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#a32d2d;font-family:inherit;}
+.btnconf{background:var(--dou);color:var(--azd);border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btnedit{background:#fff;border:1.5px solid var(--az);border-radius:7px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;color:var(--az);font-family:inherit;}
+.btnbx{background:#fff;border:1.5px solid #f09595;border-radius:7px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#a32d2d;font-family:inherit;}
+.btnpr{background:var(--azd);color:#fff;border:none;border-radius:7px;padding:9px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+/* BADGES */
+.bok{background:#d4edda;color:#155724;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block}
+.bpend{background:#fff3cd;color:#856404;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block}
+.balta{background:#2d6a1a;color:#fff;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block}
+.bbx{background:#f8d7da;color:#721c24;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block}
+.buse{background:#cce5ff;color:#004085;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes pulse-red{0%,100%{background:rgba(163,45,45,.9);box-shadow:0 0 0 0 rgba(163,45,45,.4)}50%{background:#a32d2d;box-shadow:0 0 0 6px rgba(163,45,45,0)}}
+.nav-pendentes-alert{background:#a32d2d!important;color:#fff!important;border-color:#a32d2d!important;animation:pulse-red 1.5s infinite!important;}
+.bof{background:#e8d5f5;color:#5b0e91;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block}
+.brem{background:#fff3cd;color:#856404;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;display:inline-block}
+.balt{background:#f8d7da;color:#721c24;border-radius:4px;padding:3px 7px;font-size:11px;font-weight:700;display:inline-block}
+.bdiv{background:#e8edf5;color:#1a3a6b;border-radius:4px;padding:3px 7px;font-size:11px;font-weight:700;display:inline-block}
+
+/* STATS GRID — 3+3 */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.stats-wrap{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.stats-big{display:flex;flex-direction:column}
+.stats-small{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.stat{background:#fff;border:1.5px solid #ddd;border-radius:9px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s;border-top:3px solid var(--dou);}
+.stat-big{background:#fff;border:1.5px solid #ddd;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s;border-top:4px solid var(--dou);display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;}
+.stat:active,.stat-big:active{transform:scale(.97)}
+.stat.active,.stat-big.active{border-color:var(--az);background:#e8edf5;border-top-color:var(--az)}
+.snum{font-size:22px;font-weight:700;color:var(--az)}
+.snum-big{font-size:36px;font-weight:700;color:var(--az)}
+.slbl{font-size:10px;color:#888;margin-top:1px;text-transform:uppercase;letter-spacing:.3px}
+.slbl-big{font-size:12px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+
+/* TURNO */
+.turno-info{background:#e8edf5;border:1px solid var(--az);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;color:var(--az);display:flex;align-items:center;gap:8px;font-weight:600;}
+
+/* FROW */
+.frow{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:.5px solid #eee;gap:8px}
+.frow:last-child{border-bottom:none}
+.finfo p{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:2px}
+.finfo small{font-size:12px;color:#666;line-height:1.4}
+.ftags{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px}
+.fbtns{display:flex;gap:5px;flex-shrink:0;align-items:flex-start;padding-top:2px}
+
+/* KM INFO */
+.kminfo{background:#d4edda;border:1px solid #7cbf5a;border-radius:6px;padding:7px 10px;font-size:12px;color:#155724;margin-top:4px;display:none}
+
+/* ALERT */
+.al{padding:10px 13px;border-radius:7px;font-size:13px;margin-bottom:9px;line-height:1.5}
+.al-s{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.al-i{background:#cce5ff;color:#004085;border:1px solid #b8daff}
+.al-w{background:#fff3cd;color:#856404;border:1px solid #ffeeba}
+.al-d{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+
+/* MODAL */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;padding:.8rem;overflow-y:auto;}
+.moverlay.open{display:flex}
+.mdialog{background:#fff;border-radius:12px;padding:20px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;border-top:4px solid var(--dou);margin:auto;}
+.mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.mhdr strong{font-size:15px;color:var(--az)}
+
+/* VTR TABLE — scrollable on mobile */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.vtr-table{width:100%;border-collapse:collapse;font-size:13px;min-width:420px;}
+.vtr-table th{background:var(--az);color:#fff;padding:8px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}
+.vtr-table td{padding:8px 8px;border-bottom:.5px solid #eee;vertical-align:middle;}
+.vtr-table tr:last-child td{border-bottom:none}
+.vtrempr{font-size:11px;color:#444;background:#eee;border-radius:3px;padding:2px 6px;display:inline-block}
+
+/* HBUSCA */
+.hbusca{display:flex;gap:7px;align-items:flex-end;margin-bottom:12px;padding:11px;background:#f5f7ff;border-radius:8px;border:1px solid var(--az);}
+
+/* BOLETIM */
+.boletim{background:#1a1a1a;color:#e0e0e0;border-radius:8px;padding:14px;font-family:"Courier New",monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;margin-top:8px;max-height:420px;overflow-y:auto;}
+
+/* SEP */
+.sep{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:8px 0 4px;border-bottom:.5px solid #eee;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+
+.page{display:none}.page.active{display:block}
+.rodape{text-align:center;padding:14px 0 6px;font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.3px}
+@media(min-width:600px){.fg{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.ck-grid{grid-template-columns:repeat(4,1fr)}.sgrid{grid-template-columns:repeat(6,1fr)}}
+@media print{body{display:none}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="lw" id="login-screen">
+<div class="lcard">
+  <div class="llogo">
+    <div class="lbrasao"></div>
+    <div class="l1">Governo do Estado do Rio de Janeiro</div>
+    <div class="l2">Secretaria de Estado de Polícia Militar</div>
+    <div class="l3">13ª UPP / 16º BPM — Complexo da Penha</div>
+    <div class="l4">Ficha de Circulação de Viatura</div>
+  </div>
+  <div class="ldiv"></div>
+  <div class="rtabs">
+    <button class="rtab active" onclick="setRole('motorista',this)">Motorista</button>
+    <button class="rtab" onclick="setRole('despachante',this)">Despachante</button>
+    <button class="rtab" onclick="setRole('admin',this)">Admin</button>
+  </div>
+  <div id="login-motorista">
+    <div class="al al-i" style="margin-bottom:12px">Acesso direto ao formulário. Nenhuma senha necessária.</div>
+    <button class="btnp" onclick="entrar('motorista')">Acessar Formulário</button>
+  </div>
+  <div id="login-despachante" style="display:none">
+    <div class="al al-i" style="margin-bottom:10px;font-size:12px">⏱ Serviço de <strong>12 horas</strong> · 1º Turno 05:00–17:00 · 2º Turno 17:00–05:00</div>
+    <div class="f" style="margin-bottom:9px"><label>RG</label><input type="text" id="l-du" placeholder="Seu RG" inputmode="numeric"></div>
+    <div class="f" style="margin-bottom:13px"><label>Senha</label><input type="password" id="l-dp" placeholder="Senha" onkeydown="if(event.key==='Enter')loginDesp()"></div>
+    <div id="l-de" class="al al-d" style="display:none">Usuário ou senha incorretos.</div>
+    <button class="btnp" onclick="loginDesp()">Entrar como Despachante</button>
+  </div>
+  <div id="login-admin" style="display:none">
+    <div class="f" style="margin-bottom:13px"><label>Senha admin</label><input type="password" id="l-ap" placeholder="Senha" onkeydown="if(event.key==='Enter')loginAdm()"></div>
+    <div id="l-ae" class="al al-d" style="display:none">Senha incorreta.</div>
+    <button class="btnp" onclick="loginAdm()">Entrar como Admin</button>
+  </div>
+</div>
+</div>
+
+<!-- APP -->
+<div class="wrap" id="app-screen" style="display:none">
+<div class="hdr">
+  <div class="hbrasao"></div>
+  <div class="hdrtxt">
+    <div class="h1">Governo do Estado do Rio de Janeiro · Sec. de Estado de Polícia Militar</div>
+    <div class="h2">13ª UPP / 16º BPM — Complexo da Penha</div>
+    <div class="h3">Ficha de Circulação de Viatura</div>
+  </div>
+  <div class="hright">
+    <span class="brole" id="hdr-badge">-</span>
+    <button class="bsair" onclick="sair()">Sair</button>
+  </div>
+</div>
+
+<!-- NAVS -->
+<div class="nav" id="nav-motorista" style="display:none">
+  <button class="active" onclick="sp('m-form',this,'nav-motorista')">📋 Formulário</button>
+  <button onclick="sp('m-hist',this,'nav-motorista')">📁 Histórico</button>
+  <button onclick="sp('m-baixa',this,'nav-motorista')">🔴 Baixar VTR</button>
+</div>
+<div class="nav" id="nav-despachante" style="display:none">
+  <button class="active" onclick="sp('d-painel',this,'nav-despachante')">📊 Painel</button>
+  <button id="btn-pendentes-nav" onclick="sp('d-pendentes',this,'nav-despachante')">⏳ Pendentes</button>
+  <button onclick="sp('d-viaturas',this,'nav-despachante')">🚔 Viaturas</button>
+  <button onclick="sp('d-assuncao',this,'nav-despachante')">📢 Assunção</button>
+</div>
+<div class="nav" id="nav-admin" style="display:none">
+  <button class="active" onclick="sp('a-viaturas',this,'nav-admin')">🚔 Viaturas</button>
+  <button onclick="sp('a-oficina',this,'nav-admin')">🏭 Oficina</button>
+  <button onclick="sp('a-historico',this,'nav-admin')">📋 Histórico</button>
+  <button onclick="sp('a-desf',this,'nav-admin')">♻️ Desfazimento</button>
+  <button onclick="sp('a-desps',this,'nav-admin')">👥 Despachantes</button>
+  <button onclick="sp('a-fichas',this,'nav-admin')">📁 Fichas</button>
+  <button onclick="sp('a-cfg',this,'nav-admin')">⚙️ Config</button>
+</div>
+
+<!-- ===== MOTORISTA FORM ===== -->
+<div id="page-m-form" class="page active">
+  <div class="card">
+    <div class="stitle">👤 Identificação do Militar</div>
+    <div class="fg">
+      <div class="f fcol"><label>Nome de escala *</label><input type="text" id="f-nome" placeholder="Nome de guerra" oninput="chkF()" autocomplete="off"></div>
+      <div class="f"><label>Graduação *</label><select id="f-grad" onchange="chkF()"><option value="">Selecione</option><option>Sd</option><option>Cb</option><option>3º Sgt</option><option>2º Sgt</option><option>1º Sgt</option><option>Sub Ten</option><option>2º Ten</option><option>1º Ten</option><option>Cap</option><option>Maj</option><option>Ten Cel</option><option>Cel</option></select></div>
+      <div class="f"><label>RG *</label><input type="text" id="f-rg" placeholder="Número do RG" oninput="chkF()" inputmode="numeric"></div>
+      <div class="f"><label>Telefone</label><input type="tel" id="f-tel" placeholder="Ex: 21 99999-9999" inputmode="tel"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stitle">🚔 Dados da Viatura</div>
+    <div class="fg">
+      <div class="f"><label>Prefixo *</label><input type="text" id="f-pref" placeholder="Ex: 52-3097" autocomplete="off" oninput="buscaVtr();chkF()" autocomplete="off" style="text-transform:uppercase"></div>
+      <div class="f"><label>Tipo de Serviço *</label><select id="f-setor" onchange="chkF()">
+        <option value="">Selecione</option>
+        <option>GTPP OPERAÇÕES I</option><option>GTPP OPERAÇÕES II</option>
+        <option>GTPP I</option><option>GTPP II</option><option>GTPP III</option><option>GTPP IV</option>
+        <option>GPP I</option><option>GPP II</option><option>GPP III</option><option>GPP IV</option><option>GPP V</option><option>GPP VI</option><option>GPP VII</option><option>GPP VIII</option><option>GPP IX</option><option>GPP X</option><option>GPP XI</option>
+        <option>RAS I</option><option>RAS II</option><option>RAS III</option><option>RAS IV</option><option>RAS V</option><option>RAS VI</option>
+        <option>SUPERVISÃO DE GRADUADO</option><option>ADMINISTRATIVO</option>
+        <option>MOTO PATRULHA</option><option>VAN DE TRANSPORTE</option>
+        <option>OUTRO</option>
+      </select></div>
+      <div class="f"><label>Placa</label><input type="text" id="f-placa" placeholder="Automático" readonly></div>
+      <div class="f"><label>Modelo</label><input type="text" id="f-modelo" placeholder="Automático" readonly></div>
+    </div>
+    <div id="vtr-bx-aviso" class="al al-w" style="display:none">⚠️ Esta viatura está <strong>BAIXADA</strong>. Consulte o despachante antes de prosseguir.</div>
+    <div id="aviso-dup-mot" class="al al-w" style="display:none"></div>
+  </div>
+
+  <div class="card">
+    <div class="stitle">🕐 Dados do Serviço</div>
+    <div class="fg">
+      <div class="f"><label>Data *</label><input type="date" id="f-data" oninput="chkF()"></div>
+      <div class="f"><label>Hora da Assunção *</label><input type="time" id="f-hora" oninput="chkF()"></div>
+      <div class="f fcol"><label>KM Inicial *</label><input type="number" id="f-km" placeholder="Ex: 45230" oninput="chkKm();chkF()" inputmode="numeric"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stitle">✅ Checklist de Equipamentos</div>
+    <p style="font-size:12px;color:#555;margin-bottom:8px;line-height:1.5">Verifique e registre o estado de cada item:</p>
+    <div class="ck-grid" id="ck-grid"></div>
+    <div id="ck-aviso" class="al al-w" style="display:none;margin-top:8px;font-size:12px">⚠️ Preencha todos os 7 itens do checklist para continuar.</div>
+  </div>
+
+  <div class="card">
+    <div class="stitle">🔍 Conferência Obrigatória</div>
+    <div class="alt-info">
+      <strong>Verificar obrigatoriamente antes de assumir:</strong>
+      Nível de água do radiador · Nível do óleo do motor · Condições de limpeza interna e externa da viatura.
+    </div>
+    <div class="stitle" style="margin-top:10px">📝 Alterações e Ocorrências</div>
+    <textarea class="alt-ta" id="f-alt" placeholder="Descreva TODAS as alterações: avarias, defeitos, nível de fluidos, limpeza, etc.&#10;&#10;Ao não preencher, o motorista declara que recebeu a viatura sem alterações e assume responsabilidade por qualquer irregularidade posterior."></textarea>
+    <div style="margin-top:10px">
+      <label style="font-size:12px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:5px">📷 Registro Fotográfico (opcional)</label>
+      <div class="foto-area" onclick="document.getElementById('foto-input').click()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a3a6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Toque para fotografar (opcional)</span>
+        <input type="file" id="foto-input" accept="image/*" multiple style="display:none" onchange="prevFotos(this)">
+      </div>
+      <div class="foto-prev" id="foto-prev"></div>
+    </div>
+  </div>
+
+  <button class="btnp" id="btn-env" onclick="enviarFicha()" disabled>✅ Registrar Assunção de Serviço</button>
+</div>
+
+<!-- MOTORISTA HIST -->
+<div id="page-m-hist" class="page">
+  <div class="card">
+    <div class="stitle">📁 Histórico por RG</div>
+    <div class="hbusca">
+      <div class="f" style="flex:1"><label>Seu RG</label><input type="text" id="h-rg" placeholder="Ex: 123456" onkeydown="if(event.key==='Enter')buscaHist()" inputmode="numeric"></div>
+      <button class="btnp" style="width:auto;padding:11px 18px" onclick="buscaHist()">Buscar</button>
+    </div>
+    <div id="lista-hist"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Digite seu RG e clique em Buscar.</p></div>
+  </div>
+</div>
+
+<!-- MOTORISTA BAIXAR VTR -->
+<div id="page-m-baixa" class="page">
+  <div class="card">
+    <div class="stitle">🔴 Registrar Baixa de Viatura</div>
+    <div class="al al-w" style="margin-bottom:12px">Apenas o motorista que assinou a ficha pode registrar a baixa. Digite seu RG para localizar sua viatura.</div>
+    <!-- Passo 1: busca por RG -->
+    <div id="mb-step1">
+      <div class="f" style="margin-bottom:10px">
+        <label>Seu RG *</label>
+        <input type="text" id="mb-rg" placeholder="Digite seu RG" inputmode="numeric" oninput="buscarFichaParaBaixa()">
+      </div>
+      <div id="mb-ficha-encontrada" style="display:none">
+        <div class="al al-i" id="mb-ficha-info" style="margin-bottom:10px"></div>
+        <div class="f" style="margin-bottom:12px">
+          <label>Motivo da Baixa *</label>
+          <textarea id="mb-mot" style="min-height:80px" placeholder="Descreva o problema encontrado na viatura..."></textarea>
+        </div>
+        <button class="btnp bxbtn" onclick="registrarBaixaMotorista()">🔴 Confirmar Baixa</button>
+      </div>
+      <div id="mb-sem-ficha" style="display:none" class="al al-w">Nenhuma ficha aberta encontrada para este RG hoje. Verifique se você registrou a assunção.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DESPACHANTE PAINEL ===== -->
+<div id="page-d-painel" class="page">
+  <div class="turno-info" id="turno-info">⏱ Carregando...</div>
+  <!-- Stats 3+3 -->
+  <div class="stats-wrap">
+    <!-- 1: Total VTR — grande à esquerda -->
+    <div class="stats-big">
+      <div class="stat-big active" onclick="filtrarPainel('todos',this)" id="st-btn-todos">
+        <div class="snum-big" id="st-total">0</div>
+        <div class="slbl-big">Total de Viaturas</div>
+      </div>
+    </div>
+    <!-- 2–7: grid 3+3 à direita -->
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <div class="stat" onclick="filtrarPainel('uso',this)"><div class="snum" id="st-uso" style="color:#004085">0</div><div class="slbl">Em Uso</div></div>
+        <div class="stat" onclick="filtrarPainel('livre',this)"><div class="snum" id="st-livre" style="color:#856404">0</div><div class="slbl">Parqueadas</div></div>
+        <div class="stat" onclick="filtrarPainel('bx',this)"><div class="snum" id="st-bx" style="color:#721c24">0</div><div class="slbl">Baixadas</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <div class="stat" onclick="filtrarPainel('fichas',this)"><div class="snum" id="st-fich" style="color:#155724">0</div><div class="slbl">Fichas Hoje</div></div>
+        <div class="stat" onclick="filtrarPainel('pendentes',this)"><div class="snum" id="st-pend" style="color:#856404">0</div><div class="slbl">Pendentes</div></div>
+        <div class="stat" onclick="filtrarPainel('oficina',this)"><div class="snum" id="st-of" style="color:#5b0e91">0</div><div class="slbl">Oficina</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stitle" id="painel-titulo">📋 Visão Geral</div>
+    <div id="painel-body"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Carregando...</p></div>
+  </div>
+</div>
+
+<!-- DESPACHANTE PENDENTES -->
+<div id="page-d-pendentes" class="page">
+  <div class="card">
+    <div class="stitle">⏳ Fichas Pendentes de Confirmação</div>
+    <div id="pendentes-body"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Carregando...</p></div>
+  </div>
+</div>
+
+<!-- DESPACHANTE VIATURAS (unificado com quadro) -->
+<div id="page-d-viaturas" class="page">
+  <div id="d-viaturas-body"></div>
+</div>
+
+<!-- DESPACHANTE ASSUNÇÃO -->
+<div id="page-d-assuncao" class="page">
+  <div class="card">
+    <div class="stitle">📢 Assunção de Serviço</div>
+    <div class="fg" style="margin-bottom:10px">
+      <div class="f"><label>Turno</label><select id="b-turno"><option value="1">1º TURNO (05:00 às 17:00)</option><option value="2">2º TURNO (17:00 às 05:00)</option></select></div>
+      <div class="f"><label>SOP/Despachante</label><input type="text" id="b-sop" readonly style="background:#f0f7e6;border-color:#7cbf5a;color:#2d6a1a;font-weight:600"></div>
+    </div>
+    <button class="btnp" onclick="gerarAssuncao()">📢 Gerar Assunção de Serviço</button>
+    <div id="assuncao-txt" class="boletim" style="display:none"></div>
+    <button class="btns" id="btn-copiar" style="margin-top:8px;display:none" onclick="copiarAssuncao()">📋 Copiar para WhatsApp</button>
+  </div>
+</div>
+
+<!-- ===== ADMIN DISTRIBUIÇÃO ===== -->
+
+
+<!-- ADMIN OFICINA -->
+<div id="page-a-oficina" class="page">
+  <div class="card">
+    <div class="stitle">🏭 Viaturas em Oficina Credenciada</div>
+    <p style="font-size:12px;color:#555;margin-bottom:10px">Apenas viaturas com situação "Em Oficina Credenciada" aparecem aqui. Para enviar uma viatura à oficina, acesse Viaturas → ✏️ Sit.</p>
+    <div id="adm-oficina-lista"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhuma viatura em oficina.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN HISTÓRICO DE MANUTENÇÃO -->
+<div id="page-a-historico" class="page">
+  <div class="card" style="margin-bottom:9px">
+    <div style="display:flex;gap:7px;align-items:flex-end;flex-wrap:wrap">
+      <div class="f" style="flex:1;min-width:120px"><label>Prefixo</label><input type="text" id="hist-pref" placeholder="Ex: 52-3096" oninput="renderHistoricoAdmin()"></div>
+      <div class="f" style="flex:1;min-width:120px"><label>Tipo</label>
+        <select id="hist-tipo" onchange="renderHistoricoAdmin()">
+          <option value="">Todos</option>
+          <option value="SERVICO_INTERNO">Serviço interno</option>
+          <option value="MANUT_MECANICO">Manutenção mecânico</option>
+          <option value="BAIXA_MOTORISTA">Baixa motorista</option>
+          <option value="ENVIO_OFICINA">Envio à oficina</option>
+          <option value="RETORNO_OFICINA">Retorno da oficina</option>
+        </select>
+      </div>
+      <button class="btns" onclick="document.getElementById('hist-pref').value='';document.getElementById('hist-tipo').value='';renderHistoricoAdmin()">Limpar</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stitle">📋 Histórico de Manutenções e Serviços</div>
+    <div id="adm-historico-lista"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhum registro.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN DESFAZIMENTO -->
+<div id="page-a-desf" class="page">
+  <div class="card">
+    <div class="stitle">♻️ Viaturas em Processo de Desfazimento</div>
+    <p style="font-size:12px;color:#555;margin-bottom:12px;line-height:1.5">
+      Viaturas removidas do quadro operacional. Os dados do processo podem ser adicionados a qualquer momento.
+    </p>
+    <div id="adm-desf-lista"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhuma viatura em desfazimento.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN VIATURAS UNIFICADO -->
+<div id="page-a-viaturas" class="page">
+  <!-- Busca -->
+  <div style="margin-bottom:10px">
+    <input type="text" id="busca-vtr-adm" placeholder="🔍 Buscar por prefixo, modelo ou setor..." oninput="renderAdmVtrs()"
+      style="border:1.5px solid #ccc;border-radius:8px;padding:10px 12px;font-size:14px;width:100%;font-family:inherit">
+  </div>
+  <!-- Cadastrar nova viatura -->
+  <div style="background:#f5f7ff;border:2px dashed #1a3a6b;border-radius:10px;padding:14px;margin-bottom:12px">
+    <div class="stitle" style="margin-bottom:10px">➕ Cadastrar Nova Viatura</div>
+    <div class="fg">
+      <div class="f"><label>Prefixo *</label><input type="text" id="av-pref" placeholder="Ex: 54-0275" style="text-transform:uppercase"></div>
+      <div class="f"><label>Modelo *</label><input type="text" id="av-mod" placeholder="Ex: Corolla" style="text-transform:uppercase"></div>
+      <div class="f"><label>Placa</label><input type="text" id="av-placa" placeholder="Ex: ABC-1234" style="text-transform:uppercase"></div>
+      <div class="f"><label>Situação</label><select id="av-sit"><option value="OK">✅ ALTA</option><option value="BX">🔴 BAIXADA</option><option value="OF">🔧 OFICINA</option></select></div>
+    </div>
+    <button class="btnp" onclick="cadastrarVtr()" style="margin-top:8px;width:auto;padding:10px 20px">➕ Cadastrar</button>
+  </div>
+  <!-- Cards de viaturas -->
+  <div id="adm-vtrs-cards"></div>
+</div>
+
+<!-- ADMIN OFICINA -->
+<div id="page-a-oficina" class="page">
+  <div class="card">
+    <div class="stitle">🏭 Viaturas em Oficina Credenciada</div>
+    <p style="font-size:12px;color:#555;margin-bottom:10px">Apenas viaturas com situação "Em Oficina Credenciada" aparecem aqui. Para enviar uma viatura à oficina, acesse Viaturas → ✏️ Sit.</p>
+    <div id="adm-oficina-lista"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhuma viatura em oficina.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN HISTÓRICO DE MANUTENÇÃO -->
+<div id="page-a-historico" class="page">
+  <div class="card" style="margin-bottom:9px">
+    <div style="display:flex;gap:7px;align-items:flex-end;flex-wrap:wrap">
+      <div class="f" style="flex:1;min-width:120px"><label>Prefixo</label><input type="text" id="hist-pref" placeholder="Ex: 52-3096" oninput="renderHistoricoAdmin()"></div>
+      <div class="f" style="flex:1;min-width:120px"><label>Tipo</label>
+        <select id="hist-tipo" onchange="renderHistoricoAdmin()">
+          <option value="">Todos</option>
+          <option value="SERVICO_INTERNO">Serviço interno</option>
+          <option value="MANUT_MECANICO">Manutenção mecânico</option>
+          <option value="BAIXA_MOTORISTA">Baixa motorista</option>
+          <option value="ENVIO_OFICINA">Envio à oficina</option>
+          <option value="RETORNO_OFICINA">Retorno da oficina</option>
+        </select>
+      </div>
+      <button class="btns" onclick="document.getElementById('hist-pref').value='';document.getElementById('hist-tipo').value='';renderHistoricoAdmin()">Limpar</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stitle">📋 Histórico de Manutenções e Serviços</div>
+    <div id="adm-historico-lista"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhum registro.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN DESFAZIMENTO -->
+<div id="page-a-desf" class="page">
+  <div class="card">
+    <div class="stitle">♻️ Viaturas em Processo de Desfazimento</div>
+    <p style="font-size:12px;color:#555;margin-bottom:12px;line-height:1.5">
+      Viaturas removidas do quadro operacional. Os dados do processo podem ser adicionados a qualquer momento.
+    </p>
+    <div id="adm-desf-lista"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhuma viatura em desfazimento.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN VIATURAS -->
+
+<!-- ADMIN DESPACHANTES -->
+<div id="page-a-desps" class="page">
+  <div class="card">
+    <div class="stitle">➕ Adicionar Despachante</div>
+    <div class="fg">
+      <div class="f"><label>Nome de escala</label><input type="text" id="ad-nome" placeholder="Nome"></div>
+      <div class="f"><label>Graduação</label><select id="ad-grad"><option value="">Selecione</option><option>Sd</option><option>Cb</option><option>3º Sgt</option><option>2º Sgt</option><option>1º Sgt</option><option>Sub Ten</option><option>2º Ten</option><option>1º Ten</option><option>Cap</option></select></div>
+      <div class="f"><label>RG</label><input type="text" id="ad-rg" placeholder="Ex: 103597" inputmode="numeric"></div>
+      <div class="f"><label>ID Funcional</label><input type="text" id="ad-id" placeholder="Ex: 987654"></div>
+      <div class="f"><label>Senha</label><input type="text" id="ad-senha" placeholder="Senha provisória"></div>
+    </div>
+    <button class="btnp" onclick="addDesp()" style="margin-top:8px">Adicionar Despachante</button>
+  </div>
+  <div class="card">
+    <div class="stitle">👥 Despachantes Cadastrados</div>
+    <div id="lista-desps"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhum despachante cadastrado.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN FICHAS -->
+<div id="page-a-fichas" class="page">
+  <div class="card" style="margin-bottom:9px">
+    <div class="stitle" style="margin-bottom:10px">🔍 Filtros</div>
+    <div class="fg" style="margin-bottom:8px">
+      <div class="f"><label>Data início</label><input type="date" id="fil-data" onchange="renderAdmFichas()"></div>
+      <div class="f"><label>Data fim</label><input type="date" id="fil-data-fim" onchange="renderAdmFichas()"></div>
+      <div class="f"><label>Prefixo</label><input type="text" id="fil-pref" placeholder="Ex: 52-3097" oninput="renderAdmFichas()"></div>
+      <div class="f"><label>Modelo</label>
+        <select id="fil-modelo" onchange="renderAdmFichas()">
+          <option value="">Todos os modelos</option>
+          <option>RANGER</option><option>HILUX</option><option>COROLLA</option>
+          <option>VERSA</option><option>DUSTER</option><option>FORD KA</option>
+          <option>BOXER</option><option>XRE 300</option>
+        </select>
+      </div>
+      <div class="f"><label>Setor / Tipo de Serviço</label>
+        <select id="fil-setor" onchange="renderAdmFichas()">
+          <option value="">Todos os setores</option>
+          <option>GTPP OPERAÇÕES I</option><option>GTPP OPERAÇÕES II</option>
+          <option>GTPP I</option><option>GTPP II</option><option>GTPP III</option><option>GTPP IV</option>
+          <option>GPP I</option><option>GPP II</option><option>GPP III</option><option>GPP IV</option>
+          <option>GPP V</option><option>GPP VI</option><option>GPP VII</option><option>GPP VIII</option>
+          <option>GPP IX</option><option>GPP X</option><option>GPP XI</option>
+          <option>RAS I</option><option>RAS II</option><option>RAS III</option>
+          <option>RAS IV</option><option>RAS V</option><option>RAS VI</option>
+          <option>SUPERVISÃO DE GRADUADO</option><option>ADMINISTRATIVO</option>
+          <option>MOTO PATRULHA</option><option>VAN DE TRANSPORTE</option><option>OUTRO</option>
+        </select>
+      </div>
+      <div class="f"><label>Militar (RG ou nome)</label>
+        <input type="text" id="fil-militar" placeholder="Ex: 103597 ou SILVA" oninput="renderAdmFichas()">
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+      <button class="btns" onclick="limFiltros()">🔄 Limpar filtros</button>
+      <span id="fil-count" style="font-size:12px;color:#888"></span>
+      <div style="margin-left:auto;display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btnp" style="width:auto;padding:9px 16px" onclick="exportarFichasPDF()">🖨️ Exportar PDF</button>
+        <button class="btns" onclick="exportarFichasCSV()">📊 Exportar Excel (CSV)</button>
+      </div>
+    </div>
+  </div>
+  <div class="card"><div class="stitle">📁 Todas as Fichas</div><div id="adm-fichas"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhuma ficha.</p></div></div>
+</div>
+
+<!-- ADMIN MANUTENÇÃO -->
+<div id="page-a-manut" class="page">
+  <div class="card" style="margin-bottom:9px">
+    <div style="display:flex;gap:7px;align-items:flex-end;flex-wrap:wrap">
+      <div class="f" style="flex:1;min-width:120px"><label>Prefixo</label><input type="text" id="mfil-pref" placeholder="Ex: 52-3950" oninput="renderAdmManut()"></div>
+      <div class="f" style="flex:1;min-width:130px"><label>Tipo</label>
+        <select id="mfil-tipo" onchange="renderAdmManut()">
+          <option value="">Todos</option>
+          <option>Troca de óleo</option><option>Troca de filtro de óleo</option>
+          <option>Troca de filtro de ar</option><option>Troca de velas</option>
+          <option>Troca de pneu</option><option>Troca de pastilha de freio</option>
+          <option>Revisão geral</option><option>Retorno da Oficina</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="f" style="flex:1;min-width:120px"><label>Data</label><input type="date" id="mfil-data" onchange="renderAdmManut()"></div>
+      <button class="btns" onclick="limFiltrosManut()">Limpar</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stitle" style="justify-content:space-between">
+      🔧 Histórico de Manutenções
+      <button class="btns" style="font-size:11px;padding:5px 10px" onclick="exportarManut()">📥 Exportar</button>
+    </div>
+    <div id="adm-manut"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhum registro.</p></div>
+  </div>
+</div>
+
+<!-- ADMIN CONFIG -->
+<div id="page-a-cfg" class="page">
+  <div class="card">
+    <div class="stitle">⚙️ Configurações</div>
+    <div class="f" style="margin-bottom:12px"><label>URL do Google Apps Script</label><input type="text" id="cfg-url" placeholder="https://script.google.com/..."><span class="hint">Cole o URL após publicar o script.</span></div>
+    <div class="f" style="margin-bottom:12px"><label>Nova senha do Admin</label><input type="password" id="cfg-pass" placeholder="Deixe em branco para não alterar"></div>
+    <div class="f" style="margin-bottom:12px"><label>Local padrão de liberação</label><input type="text" id="cfg-local" placeholder="Ex: Pátio da UPP Complexo da Penha"></div>
+    <button class="btnp" onclick="saveCfg()">💾 Salvar</button>
+    <div id="cfg-ok" class="al al-s" style="display:none;margin-top:9px">✅ Salvo!</div>
+  </div>
+  <div class="card">
+    <div class="stitle">🔢 Numeração das Fichas</div>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.5">Defina o número inicial das próximas fichas. A partir daí o sistema continua sequencialmente.</p>
+    <div class="fg" style="margin-bottom:12px">
+      <div class="f">
+        <label>Próximo número de ficha</label>
+        <input type="number" id="cfg-num-inicio" placeholder="Ex: 100" inputmode="numeric" min="1"
+          style="font-size:18px;font-weight:700;color:#1a3a6b;text-align:center">
+        <span class="hint">A próxima ficha registrada usará este número.</span>
+      </div>
+    </div>
+    <button class="btnp" onclick="definirNumeracao()">💾 Definir Numeração</button>
+    <div id="ordem-ok" class="al al-s" style="display:none;margin-top:9px">✅ Numeração atualizada!</div>
+  </div>
+  <div class="card">
+    <div class="stitle">🔗 Google Sheets</div>
+    <div id="sync-st" class="al al-i" style="font-size:13px"><span id="sync-txt">Verificando...</span></div>
+    <button class="btns" onclick="testarConn()" style="margin-top:8px">🔌 Testar Conexão</button>
+    <button class="btnp" onclick="sincronizarTudo()" style="margin-top:8px">☁️ Sincronizar Tudo com Google Sheets</button>
+    <div id="sinc-ok" class="al al-s" style="display:none;margin-top:9px">✅ Dados sincronizados com sucesso!</div>
+  </div>
+</div>
+
+<!-- MODAL DEFINIR RESERVA -->
+<div class="moverlay" id="modal-reserva">
+  <div class="mdialog" style="max-width:400px">
+    <div class="mhdr">
+      <strong id="res-titulo">Definir VTR Reserva</strong>
+      <button class="btns" onclick="fechaModal('modal-reserva')" style="padding:6px 11px">✕</button>
+    </div>
+    <div class="al al-i" style="margin-bottom:12px;font-size:12px" id="res-info"></div>
+    <div class="f" style="margin-bottom:14px">
+      <label>VTR Reserva</label>
+      <select id="res-select" style="font-size:14px;padding:11px 12px;border:1.5px solid #ccc;border-radius:8px;width:100%;font-family:inherit">
+        <option value="">— Nenhuma (remover reserva) —</option>
+      </select>
+      <span class="hint">Apenas VTRs sem setor fixo (RESERVA) aparecem na lista.</span>
+    </div>
+    <button class="btnp" onclick="confirmarReserva()">💾 Confirmar</button>
+  </div>
+</div>
+
+<div class="rodape">PMERJ · 13ª UPP / 16º BPM — Complexo da Penha · Sistema de Circulação de Viaturas</div>
+
+<!-- MODAL NOTIFICAÇÃO BAIXA -->
+<div class="moverlay" id="modal-notif-baixa" style="z-index:300">
+  <div class="mdialog" style="max-width:440px;border-top:4px solid #a32d2d">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:32px;margin-bottom:6px">🔴</div>
+      <strong style="font-size:16px;color:#a32d2d">CIÊNCIA — VIATURA BAIXADA</strong>
+    </div>
+    <div id="notif-corpo" style="background:#fff8f8;border:1px solid #f5c6cb;border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8"></div>
+    <div class="al al-w" style="font-size:12px;margin-bottom:14px">⚠️ A viatura só será computada como baixada após sua ciência. Clique em confirmar para atualizar o quadro.</div>
+    <div style="display:flex;gap:8px">
+      <button class="btnp" style="background:#a32d2d;border-bottom-color:#721c24" onclick="darCienciaBaixa()">✅ Confirmar ciência e baixar viatura</button>
+    </div>
+    <div id="notif-contador" style="text-align:center;margin-top:8px;font-size:11px;color:#888"></div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL FICHA -->
+<div class="moverlay" id="modal-ficha">
+  <div class="mdialog">
+    <div class="mhdr"><strong id="m-titulo">Ficha</strong><button class="btns" onclick="fechaModal('modal-ficha')" style="padding:6px 11px">✕</button></div>
+    <div id="m-body"></div>
+    <div style="display:flex;gap:7px;margin-top:14px;flex-wrap:wrap" id="m-acoes"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR -->
+<div class="moverlay" id="modal-conf">
+  <div class="mdialog" style="max-width:430px">
+    <div class="mhdr"><strong>Confirmar Assunção</strong><button class="btns" onclick="fechaModal('modal-conf')" style="padding:6px 11px">✕</button></div>
+    <div class="al al-i" style="margin-bottom:12px;font-size:13px">Dados preenchidos automaticamente pelo seu cadastro.</div>
+    <div class="fg">
+      <div class="f fcol"><label>Nome do Despachante</label><input type="text" id="c-nome" readonly style="background:#f0f7e6;border-color:#7cbf5a;color:#2d6a1a;font-weight:600"></div>
+      <div class="f"><label>Graduação</label><input type="text" id="c-grad" readonly style="background:#f0f7e6;border-color:#7cbf5a;color:#2d6a1a;font-weight:600"></div>
+      <div class="f"><label>RG</label><input type="text" id="c-rg" readonly style="background:#f0f7e6;border-color:#7cbf5a;color:#2d6a1a;font-weight:600"></div>
+      <div class="f fcol"><label>ID Funcional</label><input type="text" id="c-id" readonly style="background:#f0f7e6;border-color:#7cbf5a;color:#2d6a1a;font-weight:600"></div>
+    </div>
+    <div class="f" style="margin:10px 0 14px"><label>Local de Liberação</label><input type="text" id="c-local" placeholder="Ex: Pátio da UPP Complexo da Penha"><span class="hint" id="c-hint"></span></div>
+    <div id="conf-div-aviso" class="al al-w" style="display:none;margin-bottom:10px"></div>
+    <div id="conf-div-just" style="display:none">
+      <div class="f" style="margin-bottom:10px"><label>⚠️ Justificativa (setor diferente do padrão)</label><textarea id="c-just" style="min-height:70px" placeholder="Justifique o motivo desta viatura estar em setor diferente do padrão..."></textarea></div>
+    </div>
+    <button class="btnp" onclick="confirmarFicha()">✅ Confirmar e Assinar</button>
+  </div>
+</div>
+
+<!-- MODAL ALERTA CHECKLIST -->
+<div class="moverlay" id="modal-ck-alerta">
+  <div class="mdialog" style="max-width:560px">
+    <div class="mhdr">
+      <strong style="color:#856404">⚠️ Divergência no Checklist</strong>
+      <button class="btns" onclick="fechaModal('modal-ck-alerta')" style="padding:6px 11px">✕</button>
+    </div>
+    <div class="al al-w" style="margin-bottom:12px;font-size:13px">
+      Foram encontradas divergências em relação à ficha anterior desta viatura. Verifique e registre a providência antes de confirmar.
+    </div>
+    <!-- Comparação das fichas -->
+    <div id="ck-comparacao" style="margin-bottom:14px"></div>
+    <!-- Campo de providência -->
+    <div class="f" style="margin-bottom:14px">
+      <label>Providência tomada *</label>
+      <textarea id="ck-providencia" style="min-height:70px" placeholder="Descreva a providência tomada (ex: Motorista informou que macaco foi retirado para manutenção. Será reposto no próximo turno.)"></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btnp" onclick="confirmarComAlerta()">✅ Registrar providência e confirmar</button>
+      <button class="btns" onclick="fechaModal('modal-ck-alerta')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="moverlay" id="modal-edit">
+  <div class="mdialog">
+    <div class="mhdr"><strong>✏️ Corrigir Ficha</strong><button class="btns" onclick="fechaModal('modal-edit')" style="padding:6px 11px">✕</button></div>
+    <div class="al al-w" style="margin-bottom:12px;font-size:13px">⚠️ Apenas fichas do dia atual podem ser editadas.</div>
+    <div class="fg">
+      <div class="f fcol"><label>Nome de escala</label><input type="text" id="e-nome"></div>
+      <div class="f"><label>Graduação</label><select id="e-grad"><option value="">Selecione</option><option>Sd</option><option>Cb</option><option>3º Sgt</option><option>2º Sgt</option><option>1º Sgt</option><option>Sub Ten</option><option>2º Ten</option><option>1º Ten</option><option>Cap</option><option>Maj</option><option>Ten Cel</option><option>Cel</option></select></div>
+      <div class="f"><label>RG</label><input type="text" id="e-rg" inputmode="numeric"></div>
+      <div class="f"><label>KM Inicial</label><input type="number" id="e-km" inputmode="numeric"></div>
+      <div class="f fcol"><label>Tipo de Serviço</label><input type="text" id="e-setor"></div>
+      <div class="f fcol"><label>Alterações</label><textarea id="e-alt" style="min-height:60px"></textarea></div>
+    </div>
+    <button class="btnp" onclick="salvarEdicao()">💾 Salvar Correção</button>
+  </div>
+</div>
+
+<!-- MODAL SITUAÇÃO VTR -->
+<div class="moverlay" id="modal-sit-vtr">
+  <div class="mdialog" style="max-width:460px">
+    <div class="mhdr"><strong id="sit-titulo">Situação da Viatura</strong><button class="btns" onclick="fechaModal('modal-sit-vtr')" style="padding:6px 11px">✕</button></div>
+    <div class="f" style="margin-bottom:10px"><label>Situação *</label>
+      <select id="sit-val" onchange="toggleSitFields()">
+        <option value="OK">✅ Em Ordem (OK)</option>
+        <option value="BX">🔴 Baixada — Manutenção Interna</option>
+        <option value="OF">🔧 Em Oficina Credenciada</option>
+      </select>
+    </div>
+    <div class="f" style="margin-bottom:10px"><label>Motivo / Observações</label>
+      <textarea id="sit-mot" style="min-height:55px" placeholder="Descreva o problema ou observações..."></textarea>
+    </div>
+    <!-- Campos específicos de OFICINA -->
+    <div id="sit-of-fields" style="display:none;border-top:1.5px solid #c084e0;padding-top:12px;margin-top:4px">
+      <p style="font-size:11px;font-weight:700;color:#5b0e91;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🔧 Dados da Oficina Credenciada</p>
+      <div class="fg">
+        <div class="f fcol"><label>Nome da Oficina *</label><input type="text" id="sit-oficina" placeholder="Ex: Oficina Credenciada PMERJ — Méier"></div>
+        <div class="f fcol"><label>Endereço da Oficina</label><input type="text" id="sit-oficina-end" placeholder="Ex: Rua das Flores, 123 — Méier, RJ"></div>
+        <div class="f"><label>Nº da Ordem de Serviço (OS)</label><input type="text" id="sit-os" placeholder="Ex: 0256987"></div>
+        <div class="f"><label>Data de Entrega na Oficina</label><input type="date" id="sit-data-entrega"></div>
+      </div>
+    </div>
+    <!-- Campo de RETORNO (só aparece quando VTR está em OF) -->
+    <div id="sit-retorno-fields" style="display:none;border-top:1.5px solid #7cbf5a;padding-top:12px;margin-top:8px">
+      <p style="font-size:11px;font-weight:700;color:#2d6a1a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔙 Retorno da Oficina</p>
+      <div class="f fcol"><label>Data de Retorno</label>
+        <input type="date" id="sit-data-retorno">
+        <span class="hint">Preencha apenas quando a viatura retornar da oficina.</span>
+      </div>
+    </div>
+    <button class="btnp" style="margin-top:14px" onclick="salvarSitVtr()">💾 Salvar Situação</button>
+  </div>
+</div>
+
+<!-- MODAL SERVIÇO INTERNO (despachante lança pequenos serviços) -->
+<div class="moverlay" id="modal-servico-interno">
+  <div class="mdialog" style="max-width:440px">
+    <div class="mhdr"><strong id="si-titulo">📝 Registrar Serviço</strong><button class="btns" onclick="fechaModal('modal-servico-interno')" style="padding:6px 11px">✕</button></div>
+    <div class="al al-i" style="margin-bottom:12px;font-size:12px">Registre qualquer serviço realizado na viatura: troca de óleo, pneu, vela, limpeza, etc.</div>
+    <div class="fg">
+      <div class="f"><label>Data do Serviço</label><input type="date" id="si-data"></div>
+      <div class="f"><label>Hora</label><input type="time" id="si-hora"></div>
+      <div class="f fcol"><label>Descrição do Serviço *</label>
+        <textarea id="si-desc" style="min-height:80px" placeholder="Ex: Completou 1 litro de óleo 5W30. Verificou nível de água — ok."></textarea>
+      </div>
+      <div class="f fcol"><label>Realizado por</label><input type="text" id="si-resp" placeholder="Nome / Graduação de quem realizou"></div>
+    </div>
+    <button class="btnp" onclick="salvarServicoInterno()">💾 Salvar Registro</button>
+    <div id="si-ok" class="al al-s" style="display:none;margin-top:9px">✅ Serviço registrado com sucesso!</div>
+  </div>
+</div>
+
+<!-- MODAL MANUTENÇÃO INTERNA (admin lança o que mecânico fez na BX) -->
+<div class="moverlay" id="modal-manut-admin">
+  <div class="mdialog" style="max-width:440px">
+    <div class="mhdr"><strong id="ma-titulo">🔧 Registrar Manutenção</strong><button class="btns" onclick="fechaModal('modal-manut-admin')" style="padding:6px 11px">✕</button></div>
+    <div class="al al-i" style="margin-bottom:12px;font-size:12px">Registre o que foi feito pelo mecânico da unidade. Após salvar, você pode colocar a viatura de volta em ordem.</div>
+    <div class="fg">
+      <div class="f"><label>Data</label><input type="date" id="ma-data"></div>
+      <div class="f"><label>Hora</label><input type="time" id="ma-hora"></div>
+      <div class="f fcol"><label>O que foi feito *</label>
+        <textarea id="ma-desc" style="min-height:80px" placeholder="Ex: Troca de pastilhas de freio. Verificação do sistema elétrico. Calibragem dos pneus."></textarea>
+      </div>
+      <div class="f fcol"><label>Mecânico responsável</label><input type="text" id="ma-resp" placeholder="Nome do mecânico ou técnico"></div>
+    </div>
+    <div class="f" style="margin-bottom:10px"><label>Situação após manutenção</label>
+      <select id="ma-sit-pos">
+        <option value="OK">✅ Problema resolvido — colocar em ordem (OK)</option>
+        <option value="BX">🔴 Ainda baixada — aguardando mais serviços</option>
+      </select>
+    </div>
+    <button class="btnp" onclick="salvarManutAdmin()">💾 Salvar Manutenção</button>
+    <div id="ma-ok" class="al al-s" style="display:none;margin-top:9px">✅ Manutenção registrada!</div>
+  </div>
+</div>
+
+<!-- MODAL REGISTRO DE MANUTENÇÃO -->
+<div class="moverlay" id="modal-manut">
+  <div class="mdialog" style="max-width:480px">
+    <div class="mhdr"><strong id="manut-titulo">Registro de Manutenção</strong><button class="btns" onclick="fechaModal('modal-manut')" style="padding:6px 11px">✕</button></div>
+    <div class="al al-i" style="margin-bottom:12px;font-size:12px">Registre serviços realizados na viatura (troca de óleo, peças, reparos, etc.). Fica salvo no histórico para consulta.</div>
+    <div class="fg">
+      <div class="f fcol"><label>Prefixo da Viatura</label><input type="text" id="mn-pref" readonly style="background:#f0f7e6;border-color:#7cbf5a;color:#2d6a1a;font-weight:600"></div>
+      <div class="f"><label>Data do Serviço</label><input type="date" id="mn-data"></div>
+      <div class="f"><label>Hora</label><input type="time" id="mn-hora"></div>
+      <div class="f fcol"><label>Tipo de Serviço *</label>
+        <select id="mn-tipo">
+          <option value="">Selecione</option>
+          <option>Troca de óleo</option>
+          <option>Troca de filtro de óleo</option>
+          <option>Troca de filtro de ar</option>
+          <option>Troca de velas</option>
+          <option>Troca de pneu</option>
+          <option>Troca de pastilha de freio</option>
+          <option>Troca de disco de freio</option>
+          <option>Abastecimento de água</option>
+          <option>Revisão geral</option>
+          <option>Reparo elétrico</option>
+          <option>Reparo mecânico</option>
+          <option>Funilaria / Pintura</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="f fcol"><label>Descrição detalhada *</label><textarea id="mn-desc" style="min-height:70px" placeholder="Ex: Adicionado 1 litro de óleo 5W30, troca de vela cilindro 2..."></textarea></div>
+      <div class="f"><label>Realizado por (Nome)</label><input type="text" id="mn-resp" placeholder="Nome do responsável"></div>
+      <div class="f"><label>RG</label><input type="text" id="mn-rg" placeholder="RG" inputmode="numeric"></div>
+      <div class="f fcol"><label>Oficina / Local</label><input type="text" id="mn-oficina" placeholder="Ex: Pátio da UPP / Oficina Méier"></div>
+      <div class="f"><label>Custo (R$) — opcional</label><input type="number" id="mn-custo" placeholder="0,00" step="0.01"></div>
+    </div>
+    <button class="btnp" onclick="salvarManutencao()" style="margin-top:4px">💾 Registrar Manutenção</button>
+  </div>
+</div>
+
+<!-- MODAL HISTÓRICO MANUTENÇÃO -->
+<div class="moverlay" id="modal-hist-manut">
+  <div class="mdialog" style="max-width:560px">
+    <div class="mhdr"><strong id="hm-titulo">Histórico de Manutenção</strong><button class="btns" onclick="fechaModal('modal-hist-manut')" style="padding:6px 11px">✕</button></div>
+    <div id="hm-body"><p style="font-size:14px;color:#888;text-align:center;padding:1rem">Nenhum registro.</p></div>
+  </div>
+</div>
+
+<!-- MODAL SETOR PADRÃO -->
+<div class="moverlay" id="modal-setor-pad">
+  <div class="mdialog" style="max-width:380px">
+    <div class="mhdr"><strong id="sp-titulo">Setor Padrão</strong><button class="btns" onclick="fechaModal('modal-setor-pad')" style="padding:6px 11px">✕</button></div>
+    <div class="f" style="margin-bottom:14px"><label>Setor Padrão da Viatura</label><select id="sp-setor">
+      <option value="">Sem setor definido</option>
+      <option>GTPP OPERAÇÕES I</option><option>GTPP OPERAÇÕES II</option>
+      <option>GTPP I</option><option>GTPP II</option><option>GTPP III</option><option>GTPP IV</option><option>GTPP V</option>
+      <option>GPP I</option><option>GPP II</option><option>GPP III</option><option>GPP IV</option><option>GPP V</option><option>GPP VI</option><option>GPP VII</option><option>GPP VIII</option>
+      <option>RAS I</option><option>RAS II</option><option>RAS III</option><option>RAS IV</option><option>RAS V</option><option>RAS VI</option>
+      <option>SUPERVISÃO DE GRADUADO</option><option>ADMINISTRATIVO</option><option>MOTO PATRULHA</option><option>VAN DE TRANSPORTE</option>
+    </select></div>
+    <button class="btnp" onclick="salvarSetorPad()">💾 Salvar</button>
+  </div>
+</div>
+
+<script>
+// ===== DADOS =====
+const VTR_INICIAIS=[
+  {prefixo:"11-0027",modelo:"FORD KA",placa:"",emprego:"CMD",situacao:"OK",motivo:""},
+  {prefixo:"52-3096",modelo:"HILUX",placa:"LMX2H16",emprego:"GTPP III",situacao:"OK",motivo:""},
+  {prefixo:"52-3097",modelo:"HILUX",placa:"LMX-2J70",emprego:"GTPP I",situacao:"OK",motivo:""},
+  {prefixo:"52-3098",modelo:"HILUX",placa:"LTS6I84",emprego:"",situacao:"BX",motivo:""},
+  {prefixo:"52-3099",modelo:"HILUX",placa:"LTX8I58",emprego:"",situacao:"OK",motivo:""},
+  {prefixo:"52-3102",modelo:"HILUX",placa:"LTS6I98",emprego:"SUPERVISÃO DE GRADUADO",situacao:"OK",motivo:""},
+  {prefixo:"52-3150",modelo:"HILUX",placa:"LTU2B28",emprego:"GTPP II",situacao:"OK",motivo:""},
+  {prefixo:"52-3398",modelo:"HILUX",placa:"LUN8J11",emprego:"GTPP IV",situacao:"BX",motivo:""},
+  {prefixo:"52-3399",modelo:"HILUX",placa:"LUQ1I39",emprego:"GPP III",situacao:"OK",motivo:""},
+  {prefixo:"52-3400",modelo:"HILUX",placa:"LUT6G33",emprego:"GPP VIII",situacao:"OK",motivo:""},
+  {prefixo:"52-3401",modelo:"HILUX",placa:"LTZ8H31",emprego:"GPP VII",situacao:"OF",motivo:"",oficina:"Oficina Credenciada",oficinaEnd:"",os:"",dataEntregaOficina:"",dataRetornoOficina:""},
+  {prefixo:"52-3402",modelo:"HILUX",placa:"LTY2A52",emprego:"GPP IX",situacao:"OK",motivo:""},
+  {prefixo:"52-3950",modelo:"RANGER",placa:"RJP9B71",emprego:"GTPP OPERAÇÕES I",situacao:"OK",motivo:""},
+  {prefixo:"52-3952",modelo:"RANGER",placa:"RJQ9C13",emprego:"GTPP OPERAÇÕES II",situacao:"BX",motivo:""},
+  {prefixo:"54-0212",modelo:"COROLLA",placa:"LUJ-8J57",emprego:"RAS I",situacao:"OK",motivo:""},
+  {prefixo:"54-0274",modelo:"COROLLA",placa:"LUB9J34",emprego:"ADMINISTRATIVO",situacao:"OK",motivo:""},
+  {prefixo:"54-0275",modelo:"COROLLA",placa:"LUD9D24",emprego:"GPP I",situacao:"OK",motivo:""},
+  {prefixo:"54-0305",modelo:"COROLLA",placa:"LUA2C06",emprego:"RAS V",situacao:"OK",motivo:""},
+  {prefixo:"54-1280",modelo:"DUSTER",placa:"TTI6I70",emprego:"GPP II",situacao:"OK",motivo:""},
+  {prefixo:"54-8867",modelo:"VERSA",placa:"LMT2A65",emprego:"RAS III",situacao:"OK",motivo:""},
+  {prefixo:"54-8870",modelo:"VERSA",placa:"LMT2A67",emprego:"GPP VI",situacao:"OK",motivo:""},
+  {prefixo:"54-8872",modelo:"VERSA",placa:"LUR7I42",emprego:"RAS VI",situacao:"OK",motivo:""},
+  {prefixo:"54-9429",modelo:"COROLLA",placa:"LUG-1I98",emprego:"GPP XI",situacao:"OK",motivo:""},
+  {prefixo:"54-9470",modelo:"COROLLA",placa:"LUD-9C88",emprego:"GPP IV",situacao:"OK",motivo:""},
+  {prefixo:"54-9878",modelo:"COROLLA",placa:"LVE-2C53",emprego:"GPP V",situacao:"OK",motivo:""},
+  {prefixo:"54-9879",modelo:"COROLLA",placa:"LUO2A03",emprego:"GPP X",situacao:"OK",motivo:""},
+  {prefixo:"54-9888",modelo:"COROLLA",placa:"",emprego:"",situacao:"BX",motivo:""},
+  {prefixo:"54-9976",modelo:"COROLLA",placa:"LUH-8G21",emprego:"",situacao:"BX",motivo:""},
+  {prefixo:"54-9981",modelo:"COROLLA",placa:"LUD-9C76",emprego:"",situacao:"BX",motivo:""},
+  {prefixo:"54-9984",modelo:"COROLLA",placa:"LTZ-9D51",emprego:"RAS IV",situacao:"OK",motivo:""},
+  {prefixo:"54-9985",modelo:"COROLLA",placa:"LUO2A03",emprego:"RAS II",situacao:"OK",motivo:""},
+  {prefixo:"40-2359",modelo:"XRE 300",placa:"",emprego:"MOTO PATRULHA",situacao:"OK",motivo:""},
+  {prefixo:"40-2360",modelo:"XRE 300",placa:"",emprego:"MOTO PATRULHA",situacao:"OK",motivo:""},
+  {prefixo:"40-2361",modelo:"XRE 300",placa:"",emprego:"MOTO PATRULHA",situacao:"OK",motivo:""},
+  {prefixo:"40-2367",modelo:"XRE 300",placa:"",emprego:"MOTO PATRULHA",situacao:"OK",motivo:""},
+  {prefixo:"40-2368",modelo:"XRE 300",placa:"",emprego:"MOTO PATRULHA",situacao:"OK",motivo:""},
+  {prefixo:"40-2369",modelo:"XRE 300",placa:"",emprego:"MOTO PATRULHA",situacao:"OK",motivo:""}
+];
+const CK=[
+  {key:"radio",label:"Rádio PMERJ"},{key:"giroflex",label:"Giroflex"},
+  {key:"sirene",label:"Sirene"},{key:"estepe",label:"Estepe"},
+  {key:"macaco",label:"Macaco"},{key:"triangulo",label:"Triângulo"},
+  {key:"chaveRoda",label:"Chave de Roda"}
+];
+
+// ===== STATE =====
+let SCRIPT_URL=ls("pm_url")||"";
+let ADMIN_PASS=ls("pm_apass")||"admin2024";
+let LOCAL_PAD=ls("pm_local")||"Pátio da UPP Complexo da Penha";
+let ordemOfs=parseInt(ls("pm_ofs")||"0");
+function ls(k){return localStorage.getItem(k);}
+function lss(k,v){localStorage.setItem(k,v);}
+const DADOS_VERSAO="v2025-06-04";
+function loadVtrs(){
+  // Se versão mudou, força reset das viaturas e distribuição
+  if(ls("pm_vtrs_ver")!==DADOS_VERSAO){
+    lss("pm_vtrs",JSON.stringify(VTR_INICIAIS));
+    lss("pm_vtrs_ver",DADOS_VERSAO);
+    localStorage.removeItem("pm_distrib"); // força reload da distrib
+    return VTR_INICIAIS.map(v=>({...v}));
+  }
+  const s=ls("pm_vtrs");
+  if(s)return JSON.parse(s);
+  lss("pm_vtrs",JSON.stringify(VTR_INICIAIS));
+  return VTR_INICIAIS.map(v=>({...v}));
+}
+function loadDesf(){const s=ls("pm_desf");if(s)return JSON.parse(s);return [];}
+let vtrs=loadVtrs();
+let fichas=JSON.parse(ls("pm_fichas")||"[]");
+let desps=JSON.parse(ls("pm_desps")||"[]");
+let manutencoes=JSON.parse(ls("pm_manut")||"[]");
+let desfazimento=loadDesf();
+let notificacoes=JSON.parse(ls("pm_notif")||"[]");
+let user=null,fichaAtual=null,vtrSitIdx=-1,vtrSpIdx=-1,fotosB64=[];
+let painelFiltro="todos";
+
+// Distribuição de setores — editável pelo admin e despachante
+let distrib = JSON.parse(ls("pm_distrib") || "null") || [
+  {g:"CMD / SUPERVISÃO / ADM",s:"CMD",t:"11-0027",r:""},
+  {g:"CMD / SUPERVISÃO / ADM",s:"SUPERVISÃO",t:"52-3102",r:""},
+  {g:"CMD / SUPERVISÃO / ADM",s:"ADM",t:"54-0274",r:""},
+  {g:"CMD / SUPERVISÃO / ADM",s:"VAN TRANSPORTE",t:"12-0219",r:""},
+  {g:"GTPP OPERAÇÕES",s:"GTPP OPER. I",t:"52-3399",r:""},
+  {g:"GTPP OPERAÇÕES",s:"GTPP OPER. II",t:"52-3952",r:"52-3099"},
+  {g:"GTPP",s:"GTPP I",t:"52-3097",r:""},
+  {g:"GTPP",s:"GTPP II",t:"52-3150",r:""},
+  {g:"GTPP",s:"GTPP III",t:"52-3096",r:""},
+  {g:"GTPP",s:"GTPP IV",t:"52-3398",r:""},
+  {g:"GPP",s:"GPP I",t:"54-0275",r:""},
+  {g:"GPP",s:"GPP II",t:"54-1280",r:""},
+  {g:"GPP",s:"GPP III",t:"54-9984",r:""},
+  {g:"GPP",s:"GPP IV",t:"54-9470",r:""},
+  {g:"GPP",s:"GPP V",t:"54-9878",r:""},
+  {g:"GPP",s:"GPP VI",t:"54-8870",r:""},
+  {g:"GPP",s:"GPP VII",t:"52-3401",r:""},
+  {g:"GPP",s:"GPP VIII",t:"52-3400",r:""},
+  {g:"GPP",s:"GPP IX",t:"52-3402",r:""},
+  {g:"GPP",s:"GPP X",t:"54-9879",r:""},
+  {g:"GPP",s:"GPP XI",t:"54-9429",r:"54-8872"},
+  {g:"RAS",s:"RAS I",t:"54-0212",r:""},
+  {g:"RAS",s:"RAS II",t:"54-9885",r:""},
+  {g:"RAS",s:"RAS III",t:"54-8867",r:""},
+  {g:"RAS",s:"RAS IV",t:"52-3950",r:""},
+  {g:"RAS",s:"RAS V",t:"54-0305",r:""},
+  {g:"RAS VI",s:"RAS VI",t:"",r:""},
+  {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2359",r:""},
+  {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2360",r:""},
+  {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2361",r:""},
+  {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2367",r:""},
+  {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2368",r:""},
+  {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2369",r:""}
+];
+
+function renderQuadroDespachante(){if(typeof renderDespViaturasUnificado==="function"){renderDespViaturasUnificado();return;}const h=hoje();
+  const ficHoje=fichas.filter(f=>f.data===h&&!f.kmFinal);
+  // Prefixos que estão como reserva ativa
+  const reservasAtivas=new Set();
+  distrib.forEach(d=>{
+    if(!d.r) return;
+    const vTit=vtrs.find(v=>v.prefixo===d.t);
+    if(vTit&&(vTit.situacao==="BX"||vTit.situacao==="BX_PEND"||vTit.situacao==="OF")) reservasAtivas.add(d.r.toUpperCase());
+  });
+
+  function getVtrInfo(prefixo){
+    if(!prefixo) return null;
+    return vtrs.find(v=>v.prefixo.toUpperCase()===prefixo.toUpperCase())||null;
+  }
+  function getSitBadge(prefixo, isReserva){
+    if(!prefixo) return "<span style='color:#bbb'>—</span>";
+    const v=getVtrInfo(prefixo);
+    if(!v) return "<span style='color:#bbb'>—</span>";
+    // Se está como reserva ativa (titular baixada)
+    if(isReserva){
+      const vTit=vtrs.find(x=>x.prefixo.toUpperCase()===prefixo.toUpperCase());
+      return"<span style='background:#c8a227;color:#0e2347;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block'>Reserva ativa</span>";
+    }
+    if(v.situacao==="BX"||v.situacao==="BX_PEND") return"<span style='background:#a32d2d;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block'>Baixada</span>";
+    if(v.situacao==="OF") return"<span style='background:#5b0e91;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block'>Oficina</span>";
+    return"<span style='background:#2d6a1a;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block'>Em uso</span>";
+  }
+
+  // Agrupar setores
+  const grupos={};
+  distrib.forEach(d=>{
+    if(!grupos[d.g]) grupos[d.g]=[];
+    grupos[d.g].push(d);
+  });
+
+  // VTRs baixadas sem setor
+  const bxSemSetor=vtrs.filter(v=>(v.situacao==="BX"||v.situacao==="BX_PEND")&&!distrib.find(d=>d.t===v.prefixo));
+
+  const agora=new Date();
+  const horaAtual=pad2(agora.getHours())+":"+pad2(agora.getMinutes())+":"+pad2(agora.getSeconds());
+  let html=`<div style="font-size:11px;color:#888;text-align:right;margin-bottom:6px">Atualizado às ${horaAtual} · Auto-refresh a cada 30s</div>
+  <div style="border:1.5px solid #ddd;border-radius:10px;overflow:hidden;margin-bottom:12px">
+    <div style="display:grid;grid-template-columns:1.4fr 1.3fr 1.1fr 1.3fr 1.1fr;background:#1a3a6b;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">
+      <div style="padding:8px 10px">Setor</div>
+      <div style="padding:8px 10px;text-align:center">VTR Titular</div>
+      <div style="padding:8px 10px;text-align:center">Situação</div>
+      <div style="padding:8px 10px;text-align:center">VTR Reserva</div>
+      <div style="padding:8px 10px;text-align:center">Sit. Reserva</div>
+    </div>`;
+
+  Object.keys(grupos).forEach(g=>{
+    html+=`<div style="background:#e8edf5;color:#1a3a6b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:5px 12px;text-align:center;border-top:.5px solid #d0d8e8;border-bottom:.5px solid #d0d8e8">${g}</div>`;
+    grupos[g].forEach((d,i)=>{
+      const vTit=getVtrInfo(d.t);
+      const vRes=d.r?getVtrInfo(d.r):null;
+      const titBx=vTit&&(vTit.situacao==="BX"||vTit.situacao==="BX_PEND"||vTit.situacao==="OF");
+      // Se reserva está ativa em OUTRO setor, não mostrar aqui como VTR
+      const resEmOutroSetor=d.r&&reservasAtivas.has(d.r.toUpperCase())&&!titBx;
+      // Se titular baixada e tem reserva, mostrar reserva
+      const showReserva=titBx&&d.r&&!resEmOutroSetor;
+      // Se este setor É o setor de origem de uma VTR que está como reserva em outro lugar
+      const titIsReservaEmOutro=d.t&&reservasAtivas.has(d.t.toUpperCase());
+      const bg=i%2===0?"#fff":"#f8f9fc";
+      const rowStyle=`display:grid;grid-template-columns:1.4fr 1.3fr 1.1fr 1.3fr 1.1fr;border-bottom:.5px solid #eee;align-items:center;background:${bg}`;
+      const titPref=vTit?`<div style="font-weight:700;color:#1a3a6b;font-size:12px">${d.t}</div><div style="font-size:9px;color:#888">${vTit.modelo}</div>`:`<span style='color:#bbb'>—</span>`;
+      // Situação da titular — se ela está sendo usada como reserva, mostrar "Como reserva"
+      let sitTit="";
+      let titPrefShow=titPref;
+      if(titIsReservaEmOutro){
+        // VTR saiu do setor — mostrar vazio
+        sitTit="<span style='color:#bbb;font-size:12px'>—</span>";
+        titPrefShow="<span style='color:#bbb;font-size:11px'>VTR empenhada<br>como reserva</span>";
+      } else {
+        sitTit=getSitBadge(d.t,false);
+      }
+      const resPref=showReserva&&vRes?`<div style="font-weight:700;color:#1a3a6b;font-size:12px">${d.r}</div><div style="font-size:9px;color:#888">${vRes.modelo}</div>`:`<span style='color:#bbb'>—</span>`;
+      const sitRes=showReserva?getSitBadge(d.r,true):"<span style='color:#bbb'>—</span>";
+      const idx2=distrib.indexOf(d);
+      const editBtn=`<button onclick="definirReserva(${idx2})" style="background:transparent;border:1px solid #1a3a6b;border-radius:4px;padding:2px 6px;font-size:10px;color:#1a3a6b;cursor:pointer;margin-top:3px">✏️ Reserva</button>`;
+      html+=`<div style="${rowStyle}">
+        <div style="padding:7px 10px;font-weight:700;font-size:11px;color:#1a1a1a">${d.s}</div>
+        <div style="padding:7px 10px;text-align:center">${titPrefShow}</div>
+        <div style="padding:7px 10px;text-align:center">${sitTit}</div>
+        <div style="padding:7px 10px;text-align:center">${resPref}${!showReserva?"<br>"+editBtn:""}</div>
+        <div style="padding:7px 10px;text-align:center">${sitRes}${showReserva?"<br>"+editBtn:""}</div>
+      </div>`;
+    });
+  });
+  html+="</div>";
+
+  // Seção de baixadas — formato tabela separada
+  if(bxSemSetor.length>0||vtrs.filter(v=>v.situacao==="BX"||v.situacao==="BX_PEND").length>0){
+    const todasBx=vtrs.filter(v=>v.situacao==="BX"||v.situacao==="BX_PEND");
+    html+=`<div style="margin-top:4px">
+      <div style="font-size:11px;font-weight:700;color:#a32d2d;text-transform:uppercase;letter-spacing:.5px;padding:6px 0;border-bottom:2px solid #a32d2d;margin-bottom:0">Viaturas Baixadas</div>
+      <div style="border:1.5px solid #f5c6cb;border-radius:0 0 8px 8px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 2fr;background:#a32d2d;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">
+          <div style="padding:7px 10px">Prefixo</div>
+          <div style="padding:7px 10px;text-align:center">Modelo</div>
+          <div style="padding:7px 10px;text-align:center">Situação</div>
+          <div style="padding:7px 10px">Motivo</div>
+        </div>
+        ${todasBx.map((v,i)=>`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 2fr;border-bottom:.5px solid #f5c6cb;align-items:center;background:${i%2===0?"#fff":"#fff8f8"}">
+          <div style="padding:7px 10px;font-weight:700;color:#a32d2d;font-size:12px">${v.prefixo}</div>
+          <div style="padding:7px 10px;text-align:center;font-size:12px">${v.modelo}</div>
+          <div style="padding:7px 10px;text-align:center"><span style="background:#a32d2d;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block">${v.situacao==="BX_PEND"?"BX Pendente":"Baixada"}</span></div>
+          <div style="padding:7px 10px;font-size:11px;color:#a32d2d">${v.motivo||'A informar'}</div>
+        </div>`).join("")}
+      </div>
+    </div>`;
+  }
+
+  const _qb=document.getElementById("d-quadro-body")||document.getElementById("d-viaturas-body");if(_qb)_qb.innerHTML=html;
+}
+
+function definirReserva(idx){
+  if(idx<0||idx>=distrib.length)return;
+  const d=distrib[idx];
+  // Build list of available VTRs (no fixed setor = emprego is empty)
+  const titulares=new Set(distrib.map(x=>x.t.toUpperCase()));
+  const disponiveis=vtrs.filter(v=>
+    (v.situacao==="OK"||v.situacao==="BX")&&
+    !v.emprego&&
+    !titulares.has(v.prefixo.toUpperCase())
+  );
+  // Populate select
+  const sel=document.getElementById("res-select");
+  sel.innerHTML="<option value=''>— Nenhuma (remover reserva) —</option>";
+  disponiveis.forEach(v=>{
+    const opt=document.createElement("option");
+    opt.value=v.prefixo;
+    opt.textContent=v.prefixo+" — "+v.modelo+(v.placa?" · "+v.placa:"")+(v.situacao==="BX"?" (BX)":"");
+    if(v.prefixo===d.r) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  // If current reserva is set but not in list, add it anyway
+  if(d.r&&!disponiveis.find(v=>v.prefixo===d.r)){
+    const vr=vtrs.find(v=>v.prefixo===d.r);
+    if(vr){
+      const opt=document.createElement("option");
+      opt.value=vr.prefixo;
+      opt.textContent=vr.prefixo+" — "+vr.modelo+" (atual)";
+      opt.selected=true;
+      sel.insertBefore(opt,sel.children[1]);
+    }
+  }
+  document.getElementById("res-titulo").textContent="Definir VTR Reserva — "+d.s;
+  document.getElementById("res-info").textContent=
+    "Setor: "+d.s+" · VTR titular: "+d.t+
+    (d.r?" · Reserva atual: "+d.r:" · Sem reserva definida");
+  sel.dataset.idx=idx;
+  document.getElementById("modal-reserva").classList.add("open");
+}
+function confirmarReserva(){
+  const sel=document.getElementById("res-select");
+  const idx=parseInt(sel.dataset.idx);
+  if(isNaN(idx)||idx<0)return;
+  distrib[idx].r=sel.value;
+  lss("pm_distrib",JSON.stringify(distrib));
+  fechaModal("modal-reserva");
+  renderDistrib();
+  if(document.getElementById("page-d-viaturas")?.classList.contains("active"))
+    renderDespViaturasUnificado();
+  alert(sel.value
+    ?"✅ VTR "+sel.value+" definida como reserva do "+distrib[idx].s+"!"
+    :"✅ Reserva removida do "+distrib[idx].s+".");
+}
+
+let _quadroTimer=null;
+function iniciarAutoRefreshQuadro(){
+  pararAutoRefreshQuadro();
+  _quadroTimer=setInterval(()=>{
+    if(document.getElementById("page-d-viaturas").classList.contains("active")){
+      renderQuadroDespachante();
+    } else {
+      pararAutoRefreshQuadro();
+    }
+  },30000);
+}
+function pararAutoRefreshQuadro(){
+  if(_quadroTimer){clearInterval(_quadroTimer);_quadroTimer=null;}
+}
+
+function salva(){
+  lss("pm_fichas",JSON.stringify(fichas));
+  lss("pm_vtrs",JSON.stringify(vtrs));
+  lss("pm_desps",JSON.stringify(desps));
+  lss("pm_manut",JSON.stringify(manutencoes));
+  lss("pm_notif",JSON.stringify(notificacoes));
+  lss("pm_desf",JSON.stringify(desfazimento));
+  lss("pm_distrib",JSON.stringify(distrib));
+}
+
+// ===== SYNC COM GOOGLE SHEETS =====
+async function syncPost(action, data){
+  if(!SCRIPT_URL) return;
+  try{
+    await fetch(SCRIPT_URL,{
+      method:"POST",
+      body:JSON.stringify({action,...data}),
+      headers:{"Content-Type":"text/plain"}
+    });
+  }catch(e){console.warn("Sync falhou:",e.message);}
+}
+
+async function syncViaturas(){await syncPost("salvarViaturas",{viaturas:vtrs});}
+async function syncDistrib(){await syncPost("salvarDistrib",{distrib});}
+async function syncDespachantes(){await syncPost("salvarDespachantes",{desps});}
+async function syncNotif(notif){await syncPost("addNotificacao",{notif});}
+async function syncManut(registro){await syncPost("addManutencao",{registro});}
+async function syncCiencia(id){await syncPost("cienciaNotif",{id});}
+async function syncBaixaVtr(prefixo,registro){await syncPost("baixarVtr",{prefixo,registro});}
+async function syncFicha(ficha){await syncPost("novaFicha",{ficha});}
+async function syncConfirmarFicha(ficha){await syncPost("confirmarFicha",{ficha});}
+
+// Carrega dados do Sheets na inicialização
+async function carregarDoSheets(){
+  if(!SCRIPT_URL) return;
+  try{
+    const r=await fetch(SCRIPT_URL+"?action=getTodos");
+    const d=await r.json();
+    if(d.fichas&&d.fichas.length){
+      fichas=d.fichas.map(f=>({
+        num:String(f.Num),timestamp:f.Timestamp,nome:f.Nome,grad:f.Grad,rg:String(f.RG),tel:f.Tel||"",
+        data:f.Data,hora:f.Hora,kmInicio:parseInt(f.KM_Inicio)||0,kmFinal:f.KM_Final||null,
+        prefixo:String(f.Prefixo),placa:f.Placa||"",modelo:f.Modelo||"",setor:f.Setor||"",
+        alteracoes:f.Alteracoes||"",checklist:JSON.parse(f.Checklist||"{}"),
+        confirmado:f.Confirmado==="Sim",nomeDesp:f.Nome_Desp||"",gradDesp:f.Grad_Desp||"",
+        rgDesp:String(f.RG_Desp||""),idDesp:String(f.ID_Desp||""),localLib:f.Local_Lib||"",
+        justificativaSetor:f.Just_Setor||"",vtrJaEmpenhada:f.VTR_Ja_Empenhada==="Sim",
+        fotos:[],providenciaChecklist:f.Providencia_CK||""
+      }));
+      lss("pm_fichas",JSON.stringify(fichas));
+    }
+    if(d.viaturas&&d.viaturas.length){
+      vtrs=d.viaturas.map(v=>({
+        prefixo:String(v.Prefixo),modelo:v.Modelo||"",placa:v.Placa||"",
+        emprego:v.Emprego||"",situacao:v.Situacao||"OK",motivo:v.Motivo||"",
+        oficina:v.Oficina||"",oficinaEnd:v.OficinaEnd||"",os:v.OS||"",
+        dataEntregaOficina:v.DataEntrega||"",dataRetornoOficina:v.DataRetorno||"",
+        baixaRegistro:v.BaixaData?{data:v.BaixaData,nome:v.BaixaNome||"",rg:v.BaixaRG||""}:null
+      })).filter(v=>v.prefixo);
+      lss("pm_vtrs",JSON.stringify(vtrs));
+    }
+    if(d.distrib&&d.distrib.length){
+      distrib=d.distrib.map(r=>({g:r.Grupo||"",s:r.Setor||"",t:r.Titular||"",r:r.Reserva||""}));
+      lss("pm_distrib",JSON.stringify(distrib));
+    }
+    if(d.despachantes&&d.despachantes.length){
+      desps=d.despachantes.map(d=>({nome:d.nome,grad:d.grad,rg:String(d.rg),idFuncional:d.idFuncional||"",senha:d.senha}));
+      lss("pm_desps",JSON.stringify(desps));
+    }
+    if(d.notificacoes&&d.notificacoes.length){
+      notificacoes=d.notificacoes.map(n=>({
+        id:n.ID,tipo:n.Tipo,prefixo:n.Prefixo,modelo:n.Modelo,
+        motorista:n.Motorista,rg:n.RG,motivo:n.Motivo,
+        data:n.Data,hora:n.Hora,fichaNum:n.FichaNum,lida:n.Lida==="Sim"
+      }));
+      lss("pm_notif",JSON.stringify(notificacoes));
+    }
+    console.log("✅ Dados carregados do Google Sheets");
+  }catch(e){
+    console.warn("Sheets indisponível, usando dados locais:",e.message);
+  }
+}
+function hoje(){return new Date().toISOString().split("T")[0];}
+function fmtD(d){return d?d.split("-").reverse().join("/"):""}
+function pad2(n){return String(n).padStart(2,"0")}
+
+// ===== LOGIN =====
+function setRole(r,el){
+  document.querySelectorAll(".rtab").forEach(b=>b.classList.remove("active"));el.classList.add("active");
+  ["motorista","despachante","admin"].forEach(x=>document.getElementById("login-"+x).style.display=x===r?"block":"none");
+}
+function entrar(r){user={role:r};showApp(r);}
+function loginDesp(){
+  const u=document.getElementById("l-du").value.trim(),p=document.getElementById("l-dp").value;
+  const d=desps.find(x=>x.rg===u&&x.senha===p);
+  if(!d){document.getElementById("l-de").style.display="block";return;}
+  user={role:"despachante",...d};showApp("despachante");
+}
+function loginAdm(){
+  if(document.getElementById("l-ap").value!==ADMIN_PASS){document.getElementById("l-ae").style.display="block";return;}
+  user={role:"admin",nome:"Administrador"};showApp("admin");
+}
+function showApp(r){
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("app-screen").style.display="block";
+  ["nav-motorista","nav-despachante","nav-admin"].forEach(id=>document.getElementById(id).style.display="none");
+  document.getElementById("nav-"+r).style.display="flex";
+  document.getElementById("hdr-badge").textContent=r==="despachante"?"DESPACHANTE — "+(user.grad||"")+" "+(user.nome||""):r==="admin"?"ADMINISTRADOR":"MOTORISTA";
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  if(r==="motorista"){
+    document.getElementById("page-m-form").classList.add("active");initForm();buildCk();
+    carregarDoSheets(); // carrega dados atualizados silenciosamente
+  }
+  else if(r==="despachante"){document.getElementById("page-d-painel").classList.add("active");setTurnoInfo();renderPainel("todos");preencherSOP();
+    setTimeout(verificarNotificacoes,800);}
+  else{
+    document.getElementById("page-a-viaturas").classList.add("active");loadCfg();
+    carregarDoSheets().then(()=>renderAdmVtrs());
+  }
+}
+function sair(){
+  user=null;
+  document.getElementById("login-screen").style.display="flex";
+  document.getElementById("app-screen").style.display="none";
+  ["l-de","l-ae"].forEach(id=>document.getElementById(id).style.display="none");
+  document.getElementById("l-du").value="";document.getElementById("l-dp").value="";document.getElementById("l-ap").value="";
+  limpaForm();
+}
+
+// ===== NAV =====
+function sp(id,el,navId){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll("#"+navId+" button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");el.classList.add("active");
+  if(id==="d-painel"){setTurnoInfo();renderPainel(painelFiltro);setTimeout(verificarNotificacoes,500);}
+  if(id==="d-viaturas"){renderDespViaturasUnificado();iniciarAutoRefreshQuadro();}
+  else if(id!=="d-painel")pararAutoRefreshQuadro();
+  if(id==="d-pendentes")renderPendentes();
+  if(id==="d-viaturas")renderDespViaturasUnificado();
+  if(id==="d-assuncao")preencherSOP();
+  if(id==="a-fichas"){document.getElementById("fil-data").value=hoje();renderAdmFichas();}
+  if(id==="a-manut"){renderAdmManut();}
+  if(id==="a-desps")renderDesps();
+  if(id==="a-viaturas")renderAdmVtrs();
+  if(id==="a-distrib")renderDistrib();
+  if(id==="a-oficina")renderAdmOficina();
+  if(id==="a-historico")renderHistoricoAdmin();
+  if(id==="a-desf")renderDesfazimento();
+}
+
+// ===== TURNO =====
+function getTurno(){const h=new Date().getHours();return h>=5&&h<17?1:2;}
+function setTurnoInfo(){
+  const t=getTurno(),h=hoje();
+  document.getElementById("turno-info").textContent="⏱ "+t+"º Turno ("+(t===1?"05:00 às 17:00":"17:00 às 05:00")+") · "+fmtD(h)+" · Serviço: 12 horas";
+}
+function preencherSOP(){
+  if(user&&user.role==="despachante") document.getElementById("b-sop").value=(user.grad||"")+" "+(user.rg||"")+" "+(user.nome||"");
+  document.getElementById("b-turno").value=String(getTurno());
+}
+
+// ===== FORM MOTORISTA =====
+function initForm(){
+  const h=hoje();
+  const di=document.getElementById("f-data");
+  di.value=h;di.min=h;di.max=h;
+  const ag=new Date();
+  document.getElementById("f-hora").value=pad2(ag.getHours())+":"+pad2(ag.getMinutes());
+}
+function buildCk(){
+  document.getElementById("ck-grid").innerHTML=CK.map(it=>`
+    <div class="ck-item"><label>${it.label}</label>
+    <select id="ck-${it.key}" onchange="this.className=this.value==='OK'?'ok':this.value==='NP'?'na':this.value==='BX'?'bx':'';chkF()">
+      <option value="">Selecione</option>
+      <option value="OK">✅ Em condições</option>
+      <option value="BX">❌ Com problema</option>
+      <option value="NP">— Não possui</option>
+    </select></div>`).join("");
+}
+function normalizaPrefixo(input){
+  // Aceita: "54-0275", "540275", "0275", "275" — normaliza para o prefixo cadastrado
+  const p=input.trim().toUpperCase().replace(/\s/g,"");
+  // 1. Tentativa de match exato
+  let v=vtrs.find(x=>x.prefixo.toUpperCase()===p);
+  if(v) return v;
+  // 2. Remove hífen e compara sem hífen
+  const semHifen=p.replace(/-/g,"");
+  v=vtrs.find(x=>x.prefixo.replace(/-/g,"").toUpperCase()===semHifen);
+  if(v) return v;
+  // 3. Busca pela parte numérica final (ex: "0275" encontra "54-0275")
+  v=vtrs.find(x=>{
+    const partes=x.prefixo.split("-");
+    return partes.length>1&&partes[partes.length-1].toUpperCase()===p.replace(/-/g,"");
+  });
+  if(v) return v;
+  // 4. Busca parcial: o input está contido no prefixo (ex: "275" encontra "54-0275")
+  if(p.length>=3){
+    v=vtrs.find(x=>x.prefixo.replace(/-/g,"").toUpperCase().endsWith(p.replace(/-/g,"")));
+  }
+  return v||null;
+}
+function buscaVtr(){
+  const input=document.getElementById("f-pref").value.trim();
+  if(!input){
+    document.getElementById("f-placa").value="";
+    document.getElementById("f-modelo").value="";
+    document.getElementById("vtr-bx-aviso").style.display="none";
+    return;
+  }
+  // Só autocompleta com match exato ou parte final exata (não sufixo parcial)
+  const p=input.toUpperCase().replace(/\s/g,"");
+  const semHifen=p.replace(/-/g,"");
+  let v=null;
+  // 1. Match exato
+  v=vtrs.find(x=>x.prefixo.toUpperCase()===p);
+  if(!v){
+    // 2. Sem hífen
+    v=vtrs.find(x=>x.prefixo.replace(/-/g,"").toUpperCase()===semHifen);
+  }
+  if(!v && semHifen.length>=4){
+    // 3. Parte final exata (ex: "0274" -> "54-0274")
+    v=vtrs.find(x=>{
+      const partes=x.prefixo.split("-");
+      return partes.length>1&&partes[partes.length-1].toUpperCase()===semHifen;
+    });
+  }
+  // Só autocompleta se encontrou por match preciso
+  if(v && input.toUpperCase()!==v.prefixo.toUpperCase()){
+    document.getElementById("f-pref").value=v.prefixo;
+  }
+  document.getElementById("f-placa").value=v?v.placa:"";
+  document.getElementById("f-modelo").value=v?v.modelo:"";
+  document.getElementById("vtr-bx-aviso").style.display=(v&&v.situacao==="BX")?"block":"none";
+  if(v){
+    const ab=fichas.find(f=>f.data===hoje()&&f.prefixo.toUpperCase()===v.prefixo.toUpperCase()&&!f.kmFinal);
+    if(ab) document.getElementById("f-km").value=ab.kmInicio;
+  }
+  chkDupMot();
+}
+function chkKm(){} // KM info só para despachante, não mostramos no form do motorista
+function chkDupMot(){
+  const rg=document.getElementById("f-rg").value.trim();
+  const input=document.getElementById("f-pref").value.trim();
+  const av=document.getElementById("aviso-dup-mot");
+  av.style.display="none";
+  if(!rg||!input) return;
+  const vEncontrada=normalizaPrefixo(input);
+  const pNorm=vEncontrada?vEncontrada.prefixo.toUpperCase():input.toUpperCase();
+  const outra=fichas.find(f=>f.data===hoje()&&String(f.rg)===String(rg)&&f.prefixo.toUpperCase()!==pNorm&&!f.kmFinal);
+  if(outra) av.innerHTML="⚠️ Você já tem ficha aberta na viatura <strong>"+outra.prefixo+"</strong> ("+outra.modelo+") — Setor: "+outra.setor+". Confirme se deseja continuar com outra viatura.",av.style.display="block";
+}
+function chkF(){
+  const kmVal=parseInt(document.getElementById("f-km").value||"0");
+  const camposOk=["f-nome","f-grad","f-rg","f-data","f-hora","f-pref","f-setor"].every(id=>document.getElementById(id).value.trim()!=="")&&kmVal>0;
+  // Checklist obrigatório — todos os 7 itens precisam ser preenchidos
+  const ckOk=["radio","giroflex","sirene","estepe","macaco","triangulo","chaveRoda"].every(k=>{
+    const el=document.getElementById("ck-"+k);
+    return el&&el.value!=="";
+  });
+  const ok=camposOk&&ckOk;
+  document.getElementById("btn-env").disabled=!ok;
+  if(document.getElementById("f-km").value&&kmVal<=0){
+    document.getElementById("f-km").style.borderColor="#a32d2d";
+  } else {
+    document.getElementById("f-km").style.borderColor="";
+  }
+  // Indicador de checklist incompleto
+  const ckAviso=document.getElementById("ck-aviso");
+  if(ckAviso) ckAviso.style.display=ckOk?"none":"block";
+  if(document.getElementById("f-rg").value.trim()) chkDupMot();
+}
+function prevFotos(inp){
+  const prev=document.getElementById("foto-prev");prev.innerHTML="";fotosB64=[];
+  Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{fotosB64.push(e.target.result);const img=document.createElement("img");img.src=e.target.result;img.className="fthumb";prev.appendChild(img);};r.readAsDataURL(f);});
+}
+function getCk(){const res={};CK.forEach(it=>{res[it.key]=document.getElementById("ck-"+it.key).value||"";});return res;}
+
+function enviarFicha(){
+  const vtrEnv=normalizaPrefixo(document.getElementById("f-pref").value.trim())||{prefixo:document.getElementById("f-pref").value.trim().toUpperCase(),placa:"",modelo:""};
+  const p=vtrEnv.prefixo.toUpperCase();
+  const km=parseInt(document.getElementById("f-km").value);
+  const rg=document.getElementById("f-rg").value.trim();
+  const h=hoje();
+  // Aviso motorista em múltiplas viaturas — solicitar KM final da outra VTR
+  const outra=fichas.find(f=>f.data===h&&String(f.rg)===String(rg)&&f.prefixo.toUpperCase()!==p&&!f.kmFinal);
+  if(outra){
+    const kmFinalOutra=prompt("⚠️ ATENÇÃO: Você já tem a ficha #"+outra.num+" aberta na viatura "+outra.prefixo+" ("+outra.modelo+").\n\nAntes de assumir esta nova viatura, informe o KM FINAL da viatura "+outra.prefixo+":\n(Deixe em branco para pular)");
+    if(kmFinalOutra===null) return; // cancelou
+    if(kmFinalOutra&&!isNaN(parseInt(kmFinalOutra))){
+      const idxOutra=fichas.findIndex(f=>f.num===outra.num);
+      if(idxOutra>=0) fichas[idxOutra].kmFinal=parseInt(kmFinalOutra);
+    }
+  }
+  // Ficha anterior desta viatura
+  const ficAberta=fichas.find(f=>f.data===h&&f.prefixo.toUpperCase()===p&&!f.kmFinal);
+  if(ficAberta) ficAberta.kmFinal=km;
+  else fichas.filter(f=>f.prefixo.toUpperCase()===p&&!f.kmFinal).forEach(f=>{f.kmFinal=km;});
+  const n=ordemOfs+fichas.length+1;
+  const num=String(n).padStart(3,"0");
+  const vtr=vtrs.find(v=>v.prefixo.toUpperCase()===p)||{};
+  const ficha={
+    num,timestamp:new Date().toISOString(),
+    nome:document.getElementById("f-nome").value,
+    grad:document.getElementById("f-grad").value,rg,
+    tel:document.getElementById("f-tel").value.trim(),
+    data:h,hora:document.getElementById("f-hora").value,
+    kmInicio:ficAberta?km:km,kmFinal:null,
+    prefixo:p,placa:vtr.placa||"",modelo:vtr.modelo||"",
+    setorPadrao:vtr.emprego||"",
+    setor:document.getElementById("f-setor").value,
+    checklist:getCk(),alteracoes:document.getElementById("f-alt").value,
+    fotos:fotosB64.slice(0,6),
+    confirmado:false,nomeDesp:"",gradDesp:"",rgDesp:"",idDesp:"",localLib:"",justificativaSetor:"",
+    vtrJaEmpenhada:ficAberta?true:false,fichaAnteriorNum:ficAberta?ficAberta.num:null
+  };
+  fichas.push(ficha);salva();
+  syncFicha(ficha); // sync automático
+  document.getElementById("btn-env").disabled=true;
+  limpaForm();initForm();buildCk();
+  alert("✅ Ficha nº "+num+" registrada com sucesso!");
+}
+function limpaForm(){
+  ["f-nome","f-rg","f-km","f-pref","f-placa","f-modelo","f-alt","f-tel"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  document.getElementById("f-km").value="";
+  document.getElementById("f-grad").selectedIndex=0;document.getElementById("f-setor").selectedIndex=0;
+  document.getElementById("foto-prev").innerHTML="";
+  document.getElementById("vtr-bx-aviso").style.display="none";
+  document.getElementById("aviso-dup-mot").style.display="none";
+  fotosB64=[];CK.forEach(it=>{const el=document.getElementById("ck-"+it.key);if(el){el.value="";el.className='';}});
+}
+
+// ===== BAIXA MOTORISTA =====
+function buscaVtrBaixa(){}
+function buscarFichaParaBaixa(){
+  const rg=document.getElementById("mb-rg").value.trim();
+  const enc=document.getElementById("mb-ficha-encontrada");
+  const sem=document.getElementById("mb-sem-ficha");
+  const info=document.getElementById("mb-ficha-info");
+  enc.style.display="none"; sem.style.display="none";
+  if(rg.length<3) return;
+  const h=hoje();
+  const ficha=fichas.find(f=>f.data===h&&String(f.rg)===String(rg)&&!f.kmFinal);
+  if(!ficha){ sem.style.display="block"; return; }
+  const vtr=vtrs.find(v=>v.prefixo.toUpperCase()===ficha.prefixo.toUpperCase());
+  if(vtr&&vtr.situacao==="BX"){ info.innerHTML="⚠️ A viatura <strong>"+ficha.prefixo+"</strong> já está baixada."; enc.style.display="block"; return; }
+  info.innerHTML="🚔 Viatura encontrada: <strong>"+ficha.prefixo+"</strong> — "+ficha.modelo+
+    "<br>Ficha: <strong>#"+ficha.num+"</strong> · Motorista: "+ficha.grad+" "+ficha.nome+
+    " · KM inicial: "+ficha.kmInicio;
+  enc.style.display="block";
+}
+function registrarBaixaMotorista(){
+  const rg=document.getElementById("mb-rg").value.trim();
+  const mot=document.getElementById("mb-mot").value.trim();
+  if(!rg){alert("Informe seu RG.");return;}
+  if(!mot){alert("Descreva o motivo da baixa.");return;}
+  const h=hoje();
+  const ficha=fichas.find(f=>f.data===h&&String(f.rg)===String(rg)&&!f.kmFinal);
+  if(!ficha){alert("Nenhuma ficha aberta encontrada para seu RG hoje.");return;}
+  const idx=vtrs.findIndex(v=>v.prefixo.toUpperCase()===ficha.prefixo.toUpperCase());
+  if(idx<0){alert("Viatura não encontrada no sistema.");return;}
+  const agora=pad2(new Date().getHours())+":"+pad2(new Date().getMinutes());
+  vtrs[idx].situacao="BX_PEND";
+  vtrs[idx].motivo=mot;
+  vtrs[idx].baixaRegistro={data:h,hora:agora,nome:ficha.grad+" "+ficha.nome,rg:ficha.rg,tel:ficha.tel||""};
+  // Registrar no histórico de manutenção
+  manutencoes.push({id:Date.now(),prefixo:ficha.prefixo,modelo:ficha.modelo,
+    tipo:"BAIXA_MOTORISTA",data:h,hora:agora,
+    motivo:mot,registradoPor:ficha.grad+" "+ficha.nome,rg:ficha.rg});
+  // Criar notificação para o despachante
+  notificacoes.push({id:Date.now(),lida:false,tipo:"BAIXA_VTR",
+    prefixo:ficha.prefixo,modelo:ficha.modelo,motorista:ficha.grad+" "+ficha.nome,
+    rg:ficha.rg,motivo:mot,data:h,hora:agora,fichaNum:ficha.num});
+  lss("pm_notif",JSON.stringify(notificacoes));
+  salva();
+  syncViaturas();syncNotif(notificacoes[notificacoes.length-1]); // sync automático
+  // Limpar formulário
+  document.getElementById("mb-rg").value="";
+  document.getElementById("mb-mot").value="";
+  document.getElementById("mb-ficha-encontrada").style.display="none";
+  document.getElementById("mb-sem-ficha").style.display="none";
+  alert("✅ Baixa da viatura "+ficha.prefixo+" registrada!\n\nData: "+fmtD(h)+" às "+agora+
+    "\nRegistrado por: "+ficha.grad+" "+ficha.nome+" · RG "+ficha.rg+
+    "\nMotivo: "+mot+
+    "\n\nO despachante e a P4 serão informados para ciência e providência.");
+}
+
+function buscaHist(){
+  const rg=document.getElementById("h-rg").value.trim();
+  const div=document.getElementById("lista-hist");
+  if(!rg){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Digite seu RG.</p>";return;}
+  const minhas=fichas.filter(f=>String(f.rg)===String(rg));
+  if(!minhas.length){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhuma ficha para o RG "+rg+".</p>";return;}
+  div.innerHTML=minhas.slice().reverse().map(f=>`
+    <div class="frow">
+      <div class="finfo">
+        <p>#${f.num} · <strong>${f.prefixo}</strong> ${f.modelo||""}</p>
+        <small>${f.grad} ${f.nome} · ${fmtD(f.data)} ${f.hora} · KM ${f.kmInicio}${f.kmFinal?" → "+f.kmFinal:""}</small>
+        <div class="ftags">
+          ${f.confirmado?"<span class='bok'>✓ Confirmado</span>":"<span class='bpend'>Pendente</span>"}
+          ${f.alteracoes?"<span class='balt'>⚠️ Alt.</span>":""}
+        </div>
+      </div>
+      <div class="fbtns">
+        <button class="btns" style="padding:7px 10px;font-size:12px" onclick="abreModal('${f.num}','view')">Ver</button>
+        ${f.data===hoje()?"<button class='btnedit' onclick='abreEdit(\""+f.num+"\")'>✏️</button>":""}
+      </div>
+    </div>`).join("");
+}
+
+// ===== PAINEL DESPACHANTE =====
+function calcStats(){
+  const h=hoje();
+  const ficHoje=fichas.filter(f=>f.data===h);
+  const usoSet=new Set(ficHoje.filter(f=>!f.kmFinal).map(f=>f.prefixo.toUpperCase()));
+  const bxList=vtrs.filter(v=>v.situacao==="BX"||v.situacao==="OF");
+  const bxPendList=vtrs.filter(v=>v.situacao==="BX_PEND");
+  const livreList=vtrs.filter(v=>(v.situacao==="OK"||v.situacao==="BX_PEND")&&!usoSet.has(v.prefixo.toUpperCase()));
+  const usoList=vtrs.filter(v=>(v.situacao==="OK"||v.situacao==="BX_PEND")&&usoSet.has(v.prefixo.toUpperCase()));
+  const pend=fichas.filter(f=>!f.confirmado&&f.data===h);
+  const ofList=vtrs.filter(v=>v.situacao==="OF");
+  return{ficHoje,usoSet,bxList,bxPendList,livreList,usoList,pend,ofList};
+}
+function filtrarPainel(filtro,el){
+  painelFiltro=filtro;
+  document.querySelectorAll(".stat").forEach(s=>s.classList.remove("active"));
+  if(el)el.classList.add("active");
+  renderPainel(filtro);
+}
+function getModeloGrupo(modelo){
+  const m=(modelo||"").toUpperCase();
+  if(m.includes("FORD KA")||m.includes("FORD")) return "FORD KA";
+  if(m.includes("RANGER")) return "RANGER";
+  if(m.includes("HILUX")) return "HILUX";
+  if(m.includes("COROLLA")) return "COROLLA";
+  if(m.includes("VERSA")) return "VERSA";
+  if(m.includes("BOXER")) return "BOXER";
+  if(m.includes("DUSTER")) return "DUSTER";
+  if(m.includes("XRE")||m.includes("MOTO")) return "MOTO";
+  return "OUTROS";
+}
+let notifAtualIdx=0;
+let notifPendentes=[];
+function verificarNotificacoes(){
+  notifPendentes=notificacoes.filter(n=>!n.lida&&n.tipo==="BAIXA_VTR");
+  if(!notifPendentes.length) return;
+  notifAtualIdx=0;
+  mostrarProximaNotif();
+}
+function mostrarProximaNotif(){
+  if(notifAtualIdx>=notifPendentes.length) return;
+  const n=notifPendentes[notifAtualIdx];
+  const total=notifPendentes.length;
+  document.getElementById("notif-corpo").innerHTML=
+    "<strong>🚔 Viatura:</strong> "+n.prefixo+" — "+n.modelo+"<br>"+
+    "<strong>📋 Ficha:</strong> #"+n.fichaNum+"<br>"+
+    "<strong>👤 Motorista:</strong> "+n.motorista+" · RG "+n.rg+"<br>"+
+    "<strong>❗ Motivo:</strong> "+n.motivo+"<br>"+
+    "<strong>🕐 Data/Hora:</strong> "+fmtD(n.data)+" às "+n.hora;
+  if(total>1) document.getElementById("notif-contador").textContent="Notificação "+(notifAtualIdx+1)+" de "+total;
+  else document.getElementById("notif-contador").textContent="";
+  document.getElementById("modal-notif-baixa").classList.add("open");
+}
+function darCienciaBaixa(){
+  const n=notifPendentes[notifAtualIdx];
+  // Confirmar a baixa — muda de BX_PEND para BX
+  const vIdx=vtrs.findIndex(v=>v.prefixo===n.prefixo);
+  if(vIdx>=0) vtrs[vIdx].situacao="BX";
+  // Marcar notificação como lida
+  const nIdx=notificacoes.findIndex(x=>x.id===n.id);
+  if(nIdx>=0) notificacoes[nIdx].lida=true;
+  lss("pm_notif",JSON.stringify(notificacoes));
+  salva();
+  syncViaturas();syncNotif(notificacoes[notificacoes.length-1]); // sync automático
+  // Fechar modal
+  fechaModal("modal-notif-baixa");
+  // Atualizar painel
+  renderPainel(painelFiltro);
+  if(typeof renderDespViaturasUnificado==="function"&&document.getElementById("d-viaturas-body"))renderDespViaturasUnificado();
+  // Próxima notificação se houver
+  notifAtualIdx++;
+  if(notifAtualIdx<notifPendentes.length){
+    setTimeout(mostrarProximaNotif,400);
+  }
+}
+function abreServicoInterno(prefixo){
+  const v=vtrs.find(x=>x.prefixo===prefixo);
+  if(!v)return;
+  document.getElementById("si-titulo").textContent="📝 Registrar Serviço — "+prefixo+" ("+v.modelo+")";
+  document.getElementById("si-data").value=hoje();
+  const ag=new Date();
+  document.getElementById("si-hora").value=pad2(ag.getHours())+":"+pad2(ag.getMinutes());
+  document.getElementById("si-desc").value="";
+  document.getElementById("si-resp").value=user?((user.grad||"")+" "+(user.nome||"")):"";
+  document.getElementById("si-ok").style.display="none";
+  document.getElementById("modal-servico-interno").dataset.prefixo=prefixo;
+  document.getElementById("modal-servico-interno").classList.add("open");
+}
+function salvarServicoInterno(){
+  const prefixo=document.getElementById("modal-servico-interno").dataset.prefixo;
+  const desc=document.getElementById("si-desc").value.trim();
+  if(!desc){alert("Descreva o serviço realizado.");return;}
+  const v=vtrs.find(x=>x.prefixo===prefixo);
+  manutencoes.push({
+    id:Date.now(),prefixo,modelo:v?v.modelo:"",
+    tipo:"SERVICO_INTERNO",
+    data:document.getElementById("si-data").value,
+    hora:document.getElementById("si-hora").value,
+    descricao:desc,
+    responsavel:document.getElementById("si-resp").value.trim(),
+    registradoPor:user?((user.grad||"")+" "+(user.nome||"")):"Despachante",
+    rg:user?user.rg||"":""
+  });
+  lss("pm_manut",JSON.stringify(manutencoes));
+  document.getElementById("si-ok").style.display="block";
+  document.getElementById("si-desc").value="";
+  setTimeout(()=>{document.getElementById("si-ok").style.display="none";fechaModal("modal-servico-interno");},1500);
+}
+function abreManutAdmin(prefixo){
+  const v=vtrs.find(x=>x.prefixo===prefixo);
+  if(!v)return;
+  document.getElementById("ma-titulo").textContent="🔧 Manutenção — "+prefixo+" ("+v.modelo+")";
+  document.getElementById("ma-data").value=hoje();
+  const ag=new Date();
+  document.getElementById("ma-hora").value=pad2(ag.getHours())+":"+pad2(ag.getMinutes());
+  document.getElementById("ma-desc").value="";
+  document.getElementById("ma-resp").value="";
+  document.getElementById("ma-sit-pos").value="OK";
+  document.getElementById("ma-ok").style.display="none";
+  document.getElementById("modal-manut-admin").dataset.prefixo=prefixo;
+  document.getElementById("modal-manut-admin").classList.add("open");
+}
+function salvarManutAdmin(){
+  const prefixo=document.getElementById("modal-manut-admin").dataset.prefixo;
+  const desc=document.getElementById("ma-desc").value.trim();
+  if(!desc){alert("Descreva o que foi realizado.");return;}
+  const sitPos=document.getElementById("ma-sit-pos").value;
+  const idx=vtrs.findIndex(v=>v.prefixo===prefixo);
+  const v=idx>=0?vtrs[idx]:null;
+  manutencoes.push({
+    id:Date.now(),prefixo,modelo:v?v.modelo:"",
+    tipo:"MANUT_MECANICO",
+    data:document.getElementById("ma-data").value,
+    hora:document.getElementById("ma-hora").value,
+    descricao:desc,
+    mecanico:document.getElementById("ma-resp").value.trim(),
+    situacaoPos:sitPos,
+    registradoPor:user?((user.grad||"")+" "+(user.nome||"")):"Admin",
+    rg:user?user.rg||"":""
+  });
+  if(idx>=0){
+    vtrs[idx].situacao=sitPos;
+    if(sitPos==="OK"){
+      delete vtrs[idx].baixaRegistro;
+      delete vtrs[idx].oficina;delete vtrs[idx].oficinaEnd;
+      delete vtrs[idx].os;delete vtrs[idx].dataEntregaOficina;delete vtrs[idx].dataRetornoOficina;
+    }
+  }
+  lss("pm_manut",JSON.stringify(manutencoes));
+  salva();
+  document.getElementById("ma-ok").style.display="block";
+  setTimeout(()=>{document.getElementById("ma-ok").style.display="none";fechaModal("modal-manut-admin");renderAdmVtrs();renderPainel(painelFiltro);},1500);
+}
+
+function renderPainel(filtro){
+  const {ficHoje,usoSet,bxList,bxPendList,livreList,usoList,pend,ofList}=calcStats();
+  document.getElementById("st-total").textContent=vtrs.length;
+  document.getElementById("st-pend").textContent=pend.length;
+  // Badge piscando no botão pendentes
+  const btnPend=document.getElementById("btn-pendentes-nav");
+  if(btnPend){
+    if(pend.length>0){
+      btnPend.classList.add("nav-pendentes-alert");
+      btnPend.innerHTML="⏳ Pendentes <span style='background:#fff;color:#a32d2d;border-radius:10px;padding:0 5px;font-size:10px;font-weight:700;margin-left:3px'>"+pend.length+"</span>";
+    } else {
+      btnPend.classList.remove("nav-pendentes-alert");
+      btnPend.innerHTML="⏳ Pendentes";
+    }
+  }
+  document.getElementById("st-fich").textContent=ficHoje.length;
+  document.getElementById("st-uso").textContent=usoList.length;
+  document.getElementById("st-livre").textContent=livreList.length;
+  document.getElementById("st-bx").textContent=bxList.filter(v=>v.situacao==="BX").length;
+  document.getElementById("st-of").textContent=ofList.length;
+  // Desfazimento só para admin — não aparece nos stats do despachante
+  const div=document.getElementById("painel-body");
+  const titulos={todos:"Visão Geral",pendentes:"⏳ Fichas Pendentes",fichas:"📋 Fichas de Hoje",uso:"🔵 Viaturas em Uso",livre:"🟡 Parqueadas",bx:"🔴 Baixadas",oficina:"🔧 Em Manutenção — Oficina"};
+  document.getElementById("painel-titulo").textContent=titulos[filtro]||"Painel";
+  let html="";
+  if(filtro==="todos"){
+    // QUADRO GERAL por modelo
+    const ordemModelos=["FORD KA","RANGER","HILUX","COROLLA","VERSA","DUSTER","BOXER","MOTO","OUTROS"];
+    const grupos={};
+    ordemModelos.forEach(m=>grupos[m]=[]);
+    vtrs.forEach(v=>{const g=getModeloGrupo(v.modelo);if(grupos[g])grupos[g].push(v);else grupos["OUTROS"].push(v);});
+    // Sort each group by prefixo ascending
+    ordemModelos.forEach(m=>{grupos[m].sort((a,b)=>a.prefixo.localeCompare(b.prefixo,undefined,{numeric:true}));});
+    html+=`<div class="sep" style="margin-bottom:8px">🚔 Quadro Geral de Viaturas</div>`;
+    ordemModelos.forEach(grupo=>{
+      const lista=grupos[grupo];if(!lista.length) return;
+      html+=`<div style="margin-bottom:8px">`;
+      html+=`<div style="font-size:10px;font-weight:700;color:#1a3a6b;background:#e8edf5;padding:4px 8px;border-radius:4px;margin-bottom:4px;letter-spacing:.5px;text-transform:uppercase">${grupo} (${lista.length})</div>`;
+      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:5px">`;
+      lista.forEach(v=>{
+        const fAt=ficHoje.filter(f=>f.prefixo.toUpperCase()===v.prefixo.toUpperCase()&&!f.kmFinal).pop();
+        const emA=v.situacao==="OK"&&usoSet.has(v.prefixo.toUpperCase());
+        const isOf=v.situacao==="OF";
+        const sit=isOf?`<span class="bof" style="font-size:10px">OFICINA</span>`
+          :v.situacao==="BX"?`<span class="bbx" style="font-size:10px">BX</span>`
+          :`<span class="balta" style="font-size:10px">ALTA</span>`;
+        const diverg=emA&&fAt&&v.emprego&&fAt.setor!==v.emprego;
+        html+=`<div style="border:.5px solid #ddd;border-radius:6px;padding:5px 7px;background:${v.situacao==="BX"?"#fff8f8":isOf?"#f5edfb":emA?"#f0f7ff":"#fff"};border-left:3px solid ${v.situacao==="BX"?"#a32d2d":isOf?"#5b0e91":emA?"#004085":"#c8a227"}">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong style="font-size:12px">${v.prefixo}</strong>${sit}
+          </div>
+          <div style="font-size:10px;color:#555;margin-top:2px">${v.modelo} ${v.placa?`· ${v.placa}`:""}</div>
+          ${emA&&fAt?`<div style="font-size:10px;color:#004085;margin-top:1px">${fAt.grad} ${fAt.nome} · ${fAt.setor}</div>`:""}
+          ${v.situacao==="BX"&&v.motivo?`<div style="font-size:9px;color:#a32d2d;margin-top:1px">${v.motivo.substring(0,50)}${v.motivo.length>50?"...":""}</div>`:""}
+          ${diverg?`<div style="font-size:9px;color:#856404;margin-top:1px">⚠️ Setor divergente</div>`:""}
+        </div>`;
+      });
+      html+=`</div></div>`;
+    });
+  } else if(filtro==="pendentes"){
+    if(!pend.length) html="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>✅ Todas as fichas foram confirmadas!</p>";
+    else html=pend.map(f=>rowFichaDesp(f)).join("");
+  } else if(filtro==="fichas"){
+    if(!ficHoje.length) html="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhuma ficha hoje.</p>";
+    else html=ficHoje.map(f=>rowFichaDesp(f)).join("");
+  } else if(filtro==="uso"){
+    if(!usoList.length) html="<p style='font-size:14px;color:#888;text-align:center;padding:.5rem'>Nenhuma viatura em uso.</p>";
+    else html=usoList.map(v=>{
+      const fAt=ficHoje.filter(f=>f.prefixo.toUpperCase()===v.prefixo.toUpperCase()&&!f.kmFinal).pop();
+      const diverg=fAt&&v.emprego&&fAt.setor!==v.emprego;
+      return`<div class="frow" style="${diverg?'border-left:3px solid #c8a227;padding-left:8px':''}">
+        <div class="finfo">
+          <p><strong>${v.prefixo}</strong> · ${v.modelo}</p>
+          <small>${fAt?fAt.grad+" "+fAt.nome+" · "+fAt.setor:v.emprego}</small>
+          <div class="ftags">
+            <span class="balta">ALTA</span>
+            ${diverg?"<span class='bdiv'>⚠️ Setor divergente</span>":""}
+          </div>
+        </div>
+        <div class="fbtns">
+          ${fAt?"<button class='btns' style='padding:7px 10px;font-size:12px' onclick='abreModal(\""+fAt.num+"\",\"despachante\")'>Ver</button>":""}
+          <button class="btnbx" onclick="abreSitVtr('${v.prefixo}')">Baixar</button>
+        </div>
+      </div>`;}).join("");
+  } else if(filtro==="livre"){
+    if(!livreList.length) html="<p style='font-size:14px;color:#888;text-align:center;padding:.5rem'>Nenhuma parqueada.</p>";
+    else html=livreList.map(v=>`<div class="frow"><div class="finfo"><p><strong>${v.prefixo}</strong> · ${v.modelo}</p><small>${v.emprego||"—"}</small><div class="ftags"><span class="balta">ALTA</span></div></div></div>`).join("");
+  } else if(filtro==="bx"){
+    const soBxList=bxList.filter(v=>v.situacao==="BX");
+    if(!soBxList.length) html="<p style='font-size:14px;color:#888;text-align:center;padding:.5rem'>Nenhuma viatura baixada.</p>";
+    else html=sortVtrs(soBxList).map(v=>{
+      const br=v.baixaRegistro;
+      return`<div class="frow" style="border-left:3px solid #a32d2d;padding-left:8px">
+        <div class="finfo">
+          <p><strong>${v.prefixo}</strong> · ${v.modelo}</p>
+          <small style="color:#a32d2d">${v.motivo||"Motivo não informado"}</small>
+          ${br?`<small style="color:#888">Por: ${br.nome} · RG ${br.rg} · ${fmtD(br.data)} ${br.hora||""}</small>`:""}
+          <div class="ftags"><span class="bbx">BAIXADA</span></div>
+        </div>
+        <button class="btnedit" style="font-size:11px;padding:5px 9px" onclick="abreSitVtr('${v.prefixo}')">✏️ Atualizar</button>
+      </div>`;}).join("");
+  } else if(filtro==="oficina"){
+    if(!ofList.length) html="<p style='font-size:14px;color:#888;text-align:center;padding:.5rem'>Nenhuma viatura em oficina.</p>";
+    else html=sortVtrs(ofList).map(v=>{
+      const br=v.baixaRegistro;
+      return`<div style="border:1px solid #c084e0;border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:4px solid #5b0e91;background:#fdf5ff">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div>
+            <strong style="font-size:14px;color:#1a3a6b">${v.prefixo}</strong>
+            <span style="font-size:12px;color:#555;margin-left:8px">${v.modelo}</span>
+            <span class="bof" style="margin-left:6px;font-size:10px">OFICINA</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:#333;margin-bottom:6px">
+          <div><strong style="color:#5b0e91">Oficina:</strong> ${v.oficina||"—"}</div>
+          <div><strong style="color:#5b0e91">OS Nº:</strong> ${v.os||"—"}</div>
+          ${v.oficinaEnd?`<div style="grid-column:1/-1"><strong style="color:#5b0e91">Endereço:</strong> ${v.oficinaEnd}</div>`:""}
+          <div><strong style="color:#5b0e91">Entrega:</strong> ${v.dataEntregaOficina?fmtD(v.dataEntregaOficina):"—"}</div>
+          <div><strong style="color:#5b0e91">Retorno:</strong> ${v.dataRetornoOficina?fmtD(v.dataRetornoOficina):"Aguardando"}</div>
+          ${v.motivo?`<div style="grid-column:1/-1"><strong style="color:#5b0e91">Motivo:</strong> ${v.motivo}</div>`:""}
+          ${br?`<div style="grid-column:1/-1;color:#888;font-size:11px">Enviada por: ${br.nome} · RG ${br.rg} · ${fmtD(br.data)} ${br.hora||""}</div>`:""}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btnedit" style="font-size:11px;padding:5px 9px" onclick="abreSitVtr('${v.prefixo}')">✏️ Atualizar</button>
+          <button class="btns" style="font-size:11px;padding:5px 9px;border-color:#5b0e91;color:#5b0e91" onclick="abreManut('${v.prefixo}')">🔧 Registrar Serviço</button>
+          <button class="btns" style="font-size:11px;padding:5px 9px" onclick="abreHistManut('${v.prefixo}')">📋 Histórico</button>
+        </div>
+      </div>`;}).join("");
+  }
+  div.innerHTML=html||"<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhum dado.</p>";
+  // Also refresh pendentes if that page is active
+  if(document.getElementById("page-d-pendentes")?.classList.contains("active")) renderPendentes();
+}
+
+function rowFichaDesp(f){
+  const vtrOk=vtrs.find(v=>v.prefixo.toUpperCase()===f.prefixo.toUpperCase());
+  const diverg=vtrOk&&vtrOk.emprego&&f.setor!==vtrOk.emprego;
+  const bxPend=vtrOk&&vtrOk.situacao==="BX_PEND";
+  return`<div class="frow" style="${diverg?'border-left:3px solid #c8a227;padding-left:8px':''}${f.vtrJaEmpenhada?';border-left:3px solid #c8a227;padding-left:8px':''}">
+    <div class="finfo">
+      <p><strong>#${f.num}</strong> · <strong>${f.prefixo}</strong> ${f.modelo||""} · <em style="color:#555">${f.setor||""}</em></p>
+      <small>${f.grad} ${f.nome} · RG ${f.rg} · ${f.hora} · KM ${f.kmInicio}${f.kmFinal?" → "+f.kmFinal:""}</small>
+      <div class="ftags">
+        ${f.confirmado?"<span class='bok'>✓ Confirmado</span>":"<span class='bpend'>⏳ Pendente</span>"}
+        ${f.alteracoes?"<span class='balt'>⚠️ Alt.</span>":""}
+        ${f.vtrJaEmpenhada?"<span class='brem'>🔄 VTR já empenhada hoje</span>":""}
+        ${diverg?"<span class='bdiv'>⚠️ Setor divergente</span>":""}
+        ${bxPend?"<span style='background:#f8d7da;color:#721c24;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;animation:blink 1s infinite'>🔴 BAIXA PENDENTE</span>":""}
+        ${bxPend?"<span style='background:#f8d7da;color:#721c24;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;animation:blink 1s infinite'>🔴 BAIXA PENDENTE — DAR CIÊNCIA</span>":""}
+      </div>
+    </div>
+    <button class="btns" style="padding:7px 10px;font-size:12px" onclick="abreModal('${f.num}','despachante')">Ver</button>
+  </div>`;
+}
+
+function renderDespViaturasUnificado(){
+  const h=hoje();
+  const ficHoje=fichas.filter(f=>f.data===h&&!f.kmFinal);
+  const usoSet=new Set(ficHoje.map(f=>f.prefixo.toUpperCase()));
+  const div=document.getElementById("d-viaturas-body");
+  if(!div)return;
+
+  // Filtro ativo
+  const filtroAtivo=div.dataset.filtro||"todos";
+
+  // Header com filtros
+  let html=`<div style="display:flex;gap:6px;margin-bottom:10px">
+    <button onclick="setFiltroVtrs('todos')" style="flex:1;padding:7px 4px;border-radius:7px;border:1.5px solid ${filtroAtivo==='todos'?'#1a3a6b':'#ddd'};background:${filtroAtivo==='todos'?'#1a3a6b':'#fff'};color:${filtroAtivo==='todos'?'#fff':'#555'};font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Todos</button>
+    <button onclick="setFiltroVtrs('bx')" style="flex:1;padding:7px 4px;border-radius:7px;border:1.5px solid ${filtroAtivo==='bx'?'#a32d2d':'#f5c6cb'};background:${filtroAtivo==='bx'?'#a32d2d':'#fff0f0'};color:${filtroAtivo==='bx'?'#fff':'#a32d2d'};font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🔴 Baixadas</button>
+    <button onclick="setFiltroVtrs('of')" style="flex:1;padding:7px 4px;border-radius:7px;border:1.5px solid ${filtroAtivo==='of'?'#5b0e91':'#d4b8f0'};background:${filtroAtivo==='of'?'#5b0e91':'#faf5ff'};color:${filtroAtivo==='of'?'#fff':'#5b0e91'};font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🔧 Oficina</button>
+  </div>
+  <div style="font-size:10px;color:#888;text-align:right;margin-bottom:8px">Auto-refresh 30s</div>`;
+
+  // Build grupos from distrib
+  const grupos={};
+  distrib.forEach(d=>{
+    if(!grupos[d.g])grupos[d.g]=[];
+    grupos[d.g].push(d);
+  });
+
+  // Reservas ativas
+  const reservasAtivas=new Set();
+  distrib.forEach(d=>{
+    if(!d.r)return;
+    const vTit=vtrs.find(v=>v.prefixo===d.t);
+    if(vTit&&(vTit.situacao==="BX"||vTit.situacao==="BX_PEND"||vTit.situacao==="OF"))
+      reservasAtivas.add(d.r.toUpperCase());
+  });
+
+  function getVtr(p){return vtrs.find(v=>v.prefixo.toUpperCase()===p.toUpperCase());}
+  function getSit(p){
+    const v=getVtr(p);if(!v)return "OK";
+    if(reservasAtivas.has(p.toUpperCase()))return "RES";
+    return v.situacao;
+  }
+  function sitBadge(sit){
+    if(sit==="BX"||sit==="BX_PEND")return"<span style='background:#a32d2d;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;display:inline-block'>BX</span>";
+    if(sit==="OF")return"<span style='background:#5b0e91;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;display:inline-block'>OFICINA</span>";
+    if(sit==="RES")return"<span style='background:#c8a227;color:#0e2347;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;display:inline-block'>RESERVA</span>";
+    return"<span style='background:#2d6a1a;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;display:inline-block'>ALTA</span>";
+  }
+  function cardColor(sit){
+    if(sit==="BX"||sit==="BX_PEND")return{border:"#f5c6cb",top:"#a32d2d",bg:"#fff"};
+    if(sit==="OF")return{border:"#d4b8f0",top:"#5b0e91",bg:"#fff"};
+    if(sit==="RES")return{border:"#ffeeba",top:"#c8a227",bg:"#fff"};
+    return{border:"#c3e6cb",top:"#2d6a1a",bg:"#fff"};
+  }
+  function btnSituacao(p,sit){
+    const bg=sit==="BX"||sit==="BX_PEND"?"#a32d2d":sit==="OF"?"#5b0e91":"#1a3a6b";
+    return`<button onclick="abreSitVtr('${p}')" style="background:${bg};color:#fff;border:none;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">✏️ Situação</button>`;
+  }
+  function btnManutencao(p){
+    return`<button onclick="abreServicoInterno('${p}')" style="background:#f0f4fb;color:#1a3a6b;border:1.5px solid #c8d8f0;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">🔧 Manutenção</button>`;
+  }
+  function btnReserva(idx2){
+    return`<button onclick="definirReserva(${idx2})" style="background:#f0f4fb;color:#1a3a6b;border:1.5px solid #c8d8f0;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">🔄 Reserva</button>`;
+  }
+
+  // Render grupos
+  Object.keys(grupos).forEach(g=>{
+    const itens=grupos[g];
+    // Filter
+    const filtered=itens.filter(d=>{
+      const sit=getSit(d.t);
+      if(filtroAtivo==="bx")return sit==="BX"||sit==="BX_PEND";
+      if(filtroAtivo==="of")return sit==="OF";
+      return true;
+    });
+    if(!filtered.length)return;
+    html+=`<div style="font-size:11px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;background:#e8edf5;border-radius:7px;margin-bottom:8px;margin-top:10px;border-left:4px solid #1a3a6b">${g}</div>`;
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">`;
+    filtered.forEach((d,i)=>{
+      const sit=getSit(d.t);
+      const c=cardColor(sit);
+      const v=getVtr(d.t);
+      const vRes=d.r?getVtr(d.r):null;
+      const titIsRes=reservasAtivas.has(d.t.toUpperCase());
+      const prefColor=sit==="BX"||sit==="BX_PEND"?"#a32d2d":sit==="OF"?"#5b0e91":sit==="RES"?"#c8a227":"#1a3a6b";
+      const resHtml=d.r&&vRes&&(getSit(d.t)==="BX"||getSit(d.t)==="BX_PEND")
+        ?`<div style="font-size:10px;background:#fff8e6;border-radius:4px;padding:3px 8px;margin:4px 0;color:#856404;border:1px solid #ffeeba">Reserva ativa: <strong>${d.r}</strong> ${vRes.modelo}</div>`
+        :"";
+      const ofHtml=sit==="OF"&&v&&v.oficina
+        ?`<div style="font-size:10px;background:#f5edfb;border-radius:4px;padding:3px 8px;margin:4px 0;color:#5b0e91;border:1px solid #d4b8f0">🔧 ${v.oficina}</div>`
+        :"";
+      const titResHtml=titIsRes
+        ?`<div style="font-size:9px;color:#bbb;margin-top:2px">VTR como reserva</div>`:"";
+      html+=`<div style="border:1.5px solid ${c.border};border-top:3px solid ${c.top};border-radius:10px;overflow:hidden;background:${c.bg}">
+        <div style="padding:9px 11px 6px">
+          <div style="font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${d.s}</div>
+          <div style="font-size:14px;font-weight:700;color:${prefColor};line-height:1.2">${d.t}</div>
+          <div style="font-size:10px;color:#888;margin-top:1px">${v?v.modelo:""}${v&&v.placa?" · "+v.placa:""}</div>
+          ${resHtml}${ofHtml}${titResHtml}
+        </div>
+        <div style="padding:6px 8px;display:flex;align-items:center;justify-content:space-between;gap:4px;border-top:.5px solid #eee;flex-wrap:wrap">
+          ${sitBadge(sit)}
+          <div style="display:flex;gap:4px">
+            ${btnSituacao(d.t,sit)}
+            ${btnManutencao(d.t)}
+          </div>
+        </div>
+      </div>`;
+    });
+    html+="</div>";
+  });
+
+  // Baixadas sem setor
+  const bxSemSetor=vtrs.filter(v=>(v.situacao==="BX"||v.situacao==="BX_PEND")&&!distrib.find(d=>d.t===v.prefixo));
+  if(bxSemSetor.length&&(filtroAtivo==="todos"||filtroAtivo==="bx")){
+    html+=`<div style="font-size:11px;font-weight:700;color:#a32d2d;text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;background:#fff0f0;border-radius:7px;margin-bottom:8px;margin-top:12px;border-left:4px solid #a32d2d">🔴 Baixadas sem setor</div>`;
+    html+=`<div style="border:1.5px solid #f5c6cb;border-radius:8px;overflow:hidden">`;
+    bxSemSetor.forEach((v,i)=>{
+      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-bottom:.5px solid #f5c6cb;background:${i%2===0?'#fff':'#fff8f8'}">
+        <div>
+          <strong style="color:#a32d2d;font-size:12px">${v.prefixo}</strong>
+          <span style="color:#888;font-size:11px;margin-left:6px">${v.modelo}</span>
+          ${v.motivo?`<div style="font-size:10px;color:#a32d2d;margin-top:2px">${v.motivo}</div>`:"<div style='font-size:10px;color:#bbb;margin-top:2px'>Motivo a informar</div>"}
+        </div>
+        <div style="display:flex;gap:4px">
+          <button onclick="abreSitVtr('${v.prefixo}')" style="background:#a32d2d;color:#fff;border:none;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">✏️ Situação</button>
+          <button onclick="abreServicoInterno('${v.prefixo}')" style="background:#f0f4fb;color:#1a3a6b;border:1.5px solid #c8d8f0;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">🔧 Manutenção</button>
+        </div>
+      </div>`;
+    });
+    html+="</div>";
+  }
+
+  div.innerHTML=html;
+}
+
+function renderPendentes(){
+  const h=hoje();
+  const pend=fichas.filter(f=>!f.confirmado&&f.data===h);
+  const div=document.getElementById("pendentes-body");
+  if(!div)return;
+  if(!pend.length){
+    div.innerHTML="<div class='al al-s'>✅ Todas as fichas de hoje foram confirmadas!</div>";
+    return;
+  }
+  div.innerHTML=pend.map(f=>{
+    const vtrObj=vtrs.find(v=>v.prefixo.toUpperCase()===f.prefixo.toUpperCase());
+    const diverg=vtrObj&&vtrObj.emprego&&f.setor!==vtrObj.emprego;
+    const bxPend=vtrObj&&vtrObj.situacao==="BX_PEND";
+    return`<div class="frow" style="${diverg||bxPend?'border-left:3px solid #c8a227;padding-left:8px':''}">
+      <div class="finfo">
+        <p><strong>#${f.num}</strong> · <strong>${f.prefixo}</strong> ${f.modelo||""} · <em style="color:#555">${f.setor||""}</em></p>
+        <small>${f.grad} ${f.nome} · RG ${f.rg} · ${f.hora} · KM ${f.kmInicio}</small>
+        <div class="ftags">
+          <span class="bpend">⏳ Pendente</span>
+          ${diverg?"<span class='bdiv'>⚠️ Setor divergente</span>":""}
+          ${bxPend?"<span style='background:#f8d7da;color:#721c24;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;animation:blink 1s infinite'>🔴 BAIXA PENDENTE</span>":""}
+          ${f.alteracoes?"<span class='balt'>⚠️ Alterações</span>":""}
+        </div>
+      </div>
+      <button class="btns" style="padding:7px 10px;font-size:12px" onclick="abreModal('${f.num}','despachante')">Ver</button>
+    </div>`;
+  }).join("");
+}
+
+function compararChecklist(fichaAtual){
+  if(!fichaAtual.checklist)return null;
+  // Buscar ficha anterior da mesma VTR (confirmada)
+  const anterior=fichas.filter(f=>
+    f.prefixo.toUpperCase()===fichaAtual.prefixo.toUpperCase()&&
+    f.num!==fichaAtual.num&&f.confirmado&&f.checklist
+  ).pop();
+  if(!anterior)return null;
+  const alertas=[];
+  const labels={"radio":"Rádio PMERJ","giroflex":"Giroflex","sirene":"Sirene","estepe":"Estepe","macaco":"Macaco","triangulo":"Triângulo","chaveRoda":"Chave de Roda"};
+  Object.keys(labels).forEach(k=>{
+    const ant=anterior.checklist[k]||"";
+    const atu=fichaAtual.checklist[k]||"";
+    if(ant==="OK"&&atu==="BX") alertas.push("❌ "+labels[k]+": estava OK no turno anterior, agora com PROBLEMA");
+    if(ant!=="NP"&&atu==="NP"&&ant!=="") alertas.push("⚠️ "+labels[k]+": estava "+ant+" e agora consta como NÃO POSSUI");
+    if(ant==="OK"&&atu==="") alertas.push("⚠️ "+labels[k]+": estava OK e não foi verificado neste turno");
+  });
+  return alertas.length?alertas.join("\n"):null;
+}
+function setFiltroVtrs(filtro){
+  const div=document.getElementById("d-viaturas-body");
+  if(div){div.dataset.filtro=filtro;renderDespViaturasUnificado();}
+}
+
+function sortVtrs(lista){
+  const ordemModelo={"FORD KA":1,"RANGER":2,"HILUX":3,"COROLLA":4,"VERSA":5,"DUSTER":6,"BOXER":7,"XRE 300":8,"MOTO":8};
+  return lista.slice().sort((a,b)=>{
+    const ga=ordemModelo[a.modelo.toUpperCase()]||ordemModelo[getModeloGrupo(a.modelo)]||99;
+    const gb=ordemModelo[b.modelo.toUpperCase()]||ordemModelo[getModeloGrupo(b.modelo)]||99;
+    if(ga!==gb) return ga-gb;
+    return a.prefixo.localeCompare(b.prefixo,undefined,{numeric:true});
+  });
+}
+function renderDespVtrs(){
+  if(!document.getElementById("tbody-dvtrs")){
+    if(typeof renderDespViaturasUnificado==="function"&&document.getElementById("d-viaturas-body"))renderDespViaturasUnificado();
+    return;
+  }
+  const h=hoje();
+  const ficHoje=fichas.filter(f=>f.data===h&&!f.kmFinal);
+  const usoSet=new Set(ficHoje.map(f=>f.prefixo.toUpperCase()));
+  const ordenadas=sortVtrs(vtrs);
+  document.getElementById("tbody-dvtrs").innerHTML=ordenadas.map(v=>{
+    const fAt=ficHoje.filter(f=>f.prefixo.toUpperCase()===v.prefixo.toUpperCase()).pop();
+    const isBxPend=v.situacao==="BX_PEND";
+    const emA=(v.situacao==="OK"||isBxPend)&&usoSet.has(v.prefixo.toUpperCase());
+    const isOf=v.situacao==="OF";
+    const isBx=v.situacao==="BX";
+    const cls=(isBx||isOf||isBxPend)?"vtr-bx":"";
+    let sit="";
+    if(isOf) sit=`<span class="bof">OFICINA</span>`;
+    else if(isBx) sit=`<span class="bbx">BX</span>`;
+    else if(isBxPend) sit=`<span style="background:#f8d7da;color:#721c24;border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;animation:blink 1s infinite">🔴 BX PENDENTE</span>`;
+    else if(emA) sit=`<span class="balta">ALTA</span>`;
+    else sit=`<span class="balta">ALTA</span>`;
+    const motStr=v.motivo?`<br><small style="color:${isOf?"#5b0e91":"#a32d2d"};font-size:10px">${v.motivo.substring(0,40)}${v.motivo.length>40?"...":""}</small>`:"";
+    const ofStr=isOf?`<br><small style="color:#5b0e91;font-size:10px">${v.oficina||""}${v.os?" · OS: "+v.os:""}</small>${v.dataEntregaOficina?`<br><small style="color:#5b0e91;font-size:10px">Entrega: ${fmtD(v.dataEntregaOficina)}</small>`:""}`:""  ;
+    return`<tr class="${cls}" style="${isOf?"background:#fdf5ff":""}">
+      <td><strong>${v.prefixo}</strong></td>
+      <td>${v.modelo}</td>
+      <td>${v.emprego?`<span class="vtrempr">${v.emprego}</span>`:`<span style="background:#fff8e6;color:#c8a227;border-radius:3px;padding:1px 6px;font-size:11px;font-weight:700;border:1px solid #c8a227">RESERVA</span>`}</td>
+      <td>${sit}${motStr}${ofStr}
+        <button class="btnedit" style="font-size:10px;padding:3px 7px;margin-top:3px;display:block" onclick="abreSitVtr('${v.prefixo}')">✏️ Sit.</button>
+        ${isOf?`<button class="btns" style="font-size:10px;padding:2px 6px;margin-top:2px;display:block;border-color:#5b0e91;color:#5b0e91" onclick="abreManut('${v.prefixo}')">🔧 Serviço</button>`:""}
+        ${isOf?`<button class="btns" style="font-size:10px;padding:2px 6px;margin-top:2px;display:block" onclick="abreHistManut('${v.prefixo}')">📋 Histórico</button>`:""}
+      </td>
+      <td style="display:flex;align-items:center;gap:5px">
+        ${fAt?"<small>"+fAt.grad+" "+fAt.nome+"</small>":"<small style='color:#aaa'>—</small>"}
+      </td>
+      <td>
+        <button class="btnedit" style="font-size:10px;padding:3px 7px" onclick="abreSitVtr('${v.prefixo}')">✏️</button>
+        <button class="btns" style="font-size:10px;padding:3px 7px;margin-top:2px" onclick="abreServicoInterno('${v.prefixo}')">📝</button>
+      </td>
+    </tr>`;}).join("");
+}
+
+// ===== SITUAÇÃO VTR (DESPACHANTE/ADMIN) =====
+function abreSitVtr(prefixo){
+  const idx=vtrs.findIndex(v=>v.prefixo.toUpperCase()===prefixo.toUpperCase());
+  if(idx<0)return;
+  vtrSitIdx=idx;const v=vtrs[idx];
+  document.getElementById("sit-titulo").textContent="Situação: "+v.prefixo+" — "+v.modelo;
+  document.getElementById("sit-val").value=v.situacao==="BX_PEND"?"BX":v.situacao||"OK";
+  document.getElementById("sit-mot").value=v.motivo||"";
+  const g=id=>{const el=document.getElementById(id);if(el)el.value="";};
+  g("sit-oficina");g("sit-oficina-end");g("sit-os");g("sit-data-entrega");g("sit-data-retorno");
+  if(v.situacao==="OF"){
+    const se=id=>id;
+    if(document.getElementById("sit-oficina"))document.getElementById("sit-oficina").value=v.oficina||"";
+    if(document.getElementById("sit-oficina-end"))document.getElementById("sit-oficina-end").value=v.oficinaEnd||"";
+    if(document.getElementById("sit-os"))document.getElementById("sit-os").value=v.os||"";
+    if(document.getElementById("sit-data-entrega"))document.getElementById("sit-data-entrega").value=v.dataEntregaOficina||"";
+    if(document.getElementById("sit-data-retorno"))document.getElementById("sit-data-retorno").value=v.dataRetornoOficina||"";
+  }
+  toggleSitFields();
+  document.getElementById("modal-sit-vtr").classList.add("open");
+}
+
+function toggleSitFields(){
+  const sit=document.getElementById("sit-val").value;
+  const v=vtrSitIdx>=0?vtrs[vtrSitIdx]:null;
+  document.getElementById("sit-of-fields").style.display=sit==="OF"?"block":"none";
+  document.getElementById("sit-retorno-fields").style.display=(sit==="OF"&&v&&v.situacao==="OF")?"block":"none";
+  if(sit==="OF"&&!document.getElementById("sit-data-entrega").value){
+    document.getElementById("sit-data-entrega").value=hoje();
+  }
+}
+function toggleRetorno(){
+  const v=vtrs[vtrSitIdx];
+  const retGrp=document.getElementById("sit-retorno-group");
+  if(retGrp) retGrp.style.display=(v&&v.situacao==="OF")?"block":"none";
+}
+function salvarSitVtr(){
+  if(vtrSitIdx<0)return;
+  const g=id=>{ const el=document.getElementById(id); return el?el.value.trim():""; };
+  const sit=g("sit-val");
+  const mot=g("sit-mot");
+  const v=vtrs[vtrSitIdx];
+  const sitAnterior=v.situacao;
+  const agora={data:hoje(),hora:pad2(new Date().getHours())+":"+pad2(new Date().getMinutes()),
+    nome:user?((user.grad||"")+" "+(user.nome||"")):"Despachante",rg:user?user.rg||"":""};
+  v.situacao=sit;
+  v.motivo=mot;
+  if(sit==="OF"){
+    v.oficina=g("sit-oficina");
+    v.oficinaEnd=g("sit-oficina-end");
+    v.os=g("sit-os");
+    v.dataEntregaOficina=g("sit-data-entrega");
+    v.dataRetornoOficina=g("sit-data-retorno");
+    if(!v.baixaRegistro||sitAnterior!=="OF") v.baixaRegistro=agora;
+    manutencoes.push({id:Date.now(),prefixo:v.prefixo,modelo:v.modelo,
+      tipo:"ENVIO_OFICINA",data:v.dataEntregaOficina||hoje(),hora:agora.hora,
+      oficina:v.oficina,endereco:v.oficinaEnd,os:v.os,motivo:mot,
+      registradoPor:agora.nome,rg:agora.rg});
+  } else if(sit==="BX"){
+    if(!v.baixaRegistro) v.baixaRegistro=agora;
+    ["oficina","oficinaEnd","os","dataEntregaOficina","dataRetornoOficina"].forEach(k=>delete v[k]);
+  } else if(sit==="OK"){
+    if(sitAnterior==="OF"){
+      const dtRet=g("sit-data-retorno")||hoje();
+      manutencoes.push({id:Date.now(),prefixo:v.prefixo,modelo:v.modelo,
+        tipo:"RETORNO_OFICINA",data:dtRet,hora:agora.hora,
+        oficina:v.oficina||"",os:v.os||"",motivo:"Retorno da oficina",
+        registradoPor:agora.nome,rg:agora.rg});
+    }
+    ["baixaRegistro","oficina","oficinaEnd","os","dataEntregaOficina","dataRetornoOficina"].forEach(k=>delete v[k]);
+  }
+  salva();syncViaturas(); // sync automático
+  fechaModal("modal-sit-vtr");
+  renderPainel(painelFiltro);
+  if(typeof renderDespViaturasUnificado==="function"&&document.getElementById("d-viaturas-body"))renderDespViaturasUnificado();
+  if(typeof renderAdmVtrs==="function") renderAdmVtrs();
+}
+
+function gerarAssuncao(){
+  const h=hoje();
+  const ficHoje=fichas.filter(f=>f.data===h);
+  const usoSet=new Set(ficHoje.filter(f=>!f.kmFinal).map(f=>f.prefixo.toUpperCase()));
+  const emUso=vtrs.filter(v=>v.situacao==="OK"&&usoSet.has(v.prefixo.toUpperCase()));
+  const baixadas=vtrs.filter(v=>v.situacao==="BX");
+  const parqueadas=vtrs.filter(v=>v.situacao==="OK"&&!usoSet.has(v.prefixo.toUpperCase()));
+  const totalAlta=emUso.length+parqueadas.length;
+  const t=parseInt(document.getElementById("b-turno").value);
+  const sop=document.getElementById("b-sop").value;
+  const dtFmt=h.split("-").reverse().join("/");
+  const hor=t===1?"05:00H às 17:00H":"17:00H às 05:00H";
+  let txt="13ª UPP – COMPLEXO DA PENHA\n";
+  txt+=t+"º TURNO\n"+dtFmt+"\nHORÁRIO: "+hor;
+  if(sop) txt+="\nSOP/DESPACHANTE: "+sop;
+  txt+="\nTotal VTR de alta: "+totalAlta;
+  txt+="\nVTR em uso: "+emUso.length;
+  txt+="\nVTR baixadas: "+baixadas.length;
+  txt+="\nVTR parqueadas: "+parqueadas.length;
+  if(emUso.length){
+    txt+="\n\n✅     VIATURAS EM USO:";
+    emUso.forEach(v=>{
+      const fAt=ficHoje.filter(f=>f.prefixo.toUpperCase()===v.prefixo.toUpperCase()&&!f.kmFinal).pop();
+      txt+="\n"+v.prefixo+" - "+(fAt?fAt.setor+" - "+fAt.grad+" RG "+fAt.rg+" "+fAt.nome:v.emprego);
+    });
+  }
+  if(baixadas.length){
+    const soBx=baixadas.filter(v=>v.situacao==="BX");
+    const soOf=baixadas.filter(v=>v.situacao==="OF");
+    if(soBx.length){
+      txt+="\n\n✅     VIATURAS BAIXADAS:";
+      soBx.forEach(v=>{txt+="\n"+v.prefixo+" - "+(v.motivo||"Motivo não informado")+".";});
+    }
+    if(soOf.length){
+      txt+="\n\n✅     OFICINA:";
+      soOf.forEach(v=>{txt+="\n"+v.prefixo+" - "+(v.oficina||"Oficina")+(v.os?" (OS: "+v.os+")":"")+(v.motivo?" — "+v.motivo:"")+".";});
+    }
+  }
+  if(parqueadas.length){
+    txt+="\n\n✅     VIATURAS PARQUEADAS DE ALTA";
+    parqueadas.forEach(v=>{txt+="\n"+v.prefixo+" - "+(v.emprego||"");});
+  }
+  document.getElementById("assuncao-txt").textContent=txt;
+  document.getElementById("assuncao-txt").style.display="block";
+  document.getElementById("btn-copiar").style.display="inline-block";
+}
+function copiarAssuncao(){
+  const txt=document.getElementById("assuncao-txt").textContent;
+  navigator.clipboard.writeText(txt).then(()=>alert("✅ Copiado! Cole no WhatsApp.")).catch(()=>{
+    const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);alert("✅ Copiado!");
+  });
+}
+
+// ===== MODAL FICHA =====
+function abreModal(num,ctx){
+  fichaAtual=fichas.find(f=>f.num===num);if(!fichaAtual)return;
+  const f=fichaAtual;
+  const vtrObj=vtrs.find(v=>v.prefixo.toUpperCase()===f.prefixo.toUpperCase());
+  const diverg=vtrObj&&vtrObj.emprego&&f.setor!==vtrObj.emprego;
+  const ckHtml=CK.map(it=>{
+    const v=f.checklist?f.checklist[it.key]:"";
+    const c=v==="OK"?"#155724":v==="BX"?"#721c24":"#888";
+    const l=v==="OK"?"✅ OK":v==="BX"?"❌ Problema":v==="NP"?"— Não possui":"—";
+    return`<div style="font-size:13px;padding:2px 0"><strong>${it.label}:</strong> <span style="color:${c}">${l}</span></div>`;
+  }).join("");
+  document.getElementById("m-titulo").textContent="Ficha #"+f.num+" — "+f.grad+" "+f.nome;
+  document.getElementById("m-body").innerHTML=`
+    ${diverg?"<div class='al al-w' style='margin-bottom:10px'>⚠️ Setor divergente: padrão desta viatura é <strong>"+(vtrObj.emprego)+"</strong>, assunção feita em <strong>"+f.setor+"</strong>."+(f.justificativaSetor?" Justificativa: "+f.justificativaSetor:"")+"</div>":""}
+    ${f.vtrJaEmpenhada?"<div class='al al-i' style='margin-bottom:10px'>🔄 Esta viatura já havia sido empenhada hoje (ficha #"+f.fichaAnteriorNum+"). KM inicial transferido automaticamente.</div>":""}
+    <table style="width:100%;font-size:14px;border-collapse:collapse;margin-bottom:10px">
+      <tr><td style="color:#666;padding:5px 0;width:110px">Militar</td><td><strong>${f.grad} ${f.nome}</strong></td></tr>
+      <tr><td style="color:#666;padding:5px 0">RG</td><td>${f.rg}</td></tr>
+      <tr><td style="color:#666;padding:5px 0">Data/Hora</td><td>${fmtD(f.data)} às ${f.hora}</td></tr>
+      <tr><td style="color:#666;padding:5px 0">Prefixo/VTR</td><td><strong>${f.prefixo}</strong> · ${f.modelo||""} · ${f.placa||""}</td></tr>
+      <tr><td style="color:#666;padding:5px 0">Setor</td><td>${f.setor||"—"}</td></tr>
+      <tr><td style="color:#666;padding:5px 0">KM Início</td><td>${f.kmInicio}</td></tr>
+      <tr><td style="color:#666;padding:5px 0">KM Final</td><td>${f.kmFinal||"<em style='color:#aaa'>Aguardando</em>"}</td></tr>
+      ${f.alteracoes?`<tr><td style="color:#666;padding:5px 0;vertical-align:top">Alterações</td><td style="color:#721c24">${f.alteracoes}</td></tr>`:""}
+      ${f.confirmado?`<tr><td colspan="2" style="padding-top:8px"><div class="al al-s" style="margin:0">✅ ${f.gradDesp||""} ${f.nomeDesp} · RG ${f.rgDesp} · ID ${f.idDesp} · Local: ${f.localLib}</div></td></tr>`:""}
+    </table>
+    ${ckHtml?`<div style="background:#f9f9f9;border-radius:6px;padding:9px 11px;display:grid;grid-template-columns:1fr 1fr;gap:2px">${ckHtml}</div>`:""}
+    ${f.fotos&&f.fotos.length?`<div style="margin-top:10px"><p style="font-size:12px;font-weight:700;color:#444;margin-bottom:5px">FOTOS</p><div class="foto-prev">${f.fotos.map(s=>`<img src="${s}" class="fthumb">`).join("")}</div></div>`:""}
+  `;
+  const ac=document.getElementById("m-acoes");ac.innerHTML="";
+  if(ctx==="admin"){
+    const bp=document.createElement("button");bp.className="btnpr";bp.textContent="🖨️ Imprimir";bp.onclick=imprimirFicha;ac.appendChild(bp);
+  }
+  if(ctx==="despachante"&&!f.confirmado){
+    const bc=document.createElement("button");bc.className="btnconf";bc.textContent="✅ Confirmar";bc.onclick=()=>abreConf(diverg,vtrObj?vtrObj.emprego:"");ac.appendChild(bc);
+  }
+  if((ctx==="admin"||ctx==="despachante")&&f.data===hoje()){
+    const be=document.createElement("button");be.className="btnedit";be.textContent="✏️ Corrigir";be.onclick=()=>{fechaModal("modal-ficha");abreEdit(f.num);};ac.appendChild(be);
+  }
+  document.getElementById("modal-ficha").classList.add("open");
+}
+function fechaModal(id){document.getElementById(id).classList.remove("open");}
+
+// ===== CONFIRMAR =====
+function abreConf(diverg,setorPadrao){
+  if(!user||user.role!=="despachante")return;
+  // Verificar checklist ANTES de abrir confirmação
+  const alerta=fichaAtual?compararChecklist(fichaAtual):null;
+  if(alerta){
+    // Mostrar modal de alerta com comparação
+    mostrarAlertaChecklist(alerta,diverg,setorPadrao);
+    return;
+  }
+  abrirModalConf(diverg,setorPadrao);
+}
+function mostrarAlertaChecklist(alerta,diverg,setorPadrao){
+  if(!fichaAtual)return;
+  const anterior=fichas.filter(f=>
+    f.prefixo.toUpperCase()===fichaAtual.prefixo.toUpperCase()&&
+    f.num!==fichaAtual.num&&f.confirmado&&f.checklist
+  ).pop();
+  const labels={"radio":"Rádio PMERJ","giroflex":"Giroflex","sirene":"Sirene","estepe":"Estepe","macaco":"Macaco","triangulo":"Triângulo","chaveRoda":"Chave de Roda"};
+  const sitLabel=v=>v==="OK"?"<span style='color:#2d6a1a;font-weight:700'>✅ OK</span>":v==="BX"?"<span style='color:#a32d2d;font-weight:700'>❌ PROBLEMA</span>":v==="NP"?"<span style='color:#888'>— NÃO POSSUI</span>":"<span style='color:#bbb'>—</span>";
+  let comp=`<div style="border:1px solid #ffeeba;border-radius:8px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;background:#856404;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 10px">
+      <div>Item</div>
+      <div style="text-align:center">Ficha Anterior<br><small style="font-weight:400">#${anterior?anterior.num:"—"}</small></div>
+      <div style="text-align:center">Ficha Atual<br><small style="font-weight:400">#${fichaAtual.num}</small></div>
+    </div>`;
+  Object.keys(labels).forEach(k=>{
+    const ant=anterior&&anterior.checklist?anterior.checklist[k]||"":"";
+    const atu=fichaAtual.checklist?fichaAtual.checklist[k]||"":"";
+    const diverge=(ant==="OK"&&atu==="BX")||(ant!=="NP"&&atu==="NP"&&ant!=="");
+    comp+=`<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;padding:6px 10px;border-top:.5px solid #ffeeba;background:${diverge?"#fff8e6":"#fff"};align-items:center">
+      <div style="font-size:12px;font-weight:${diverge?"700":"400"}">${labels[k]}${diverge?" ⚠️":""}</div>
+      <div style="text-align:center;font-size:11px">${sitLabel(ant)}</div>
+      <div style="text-align:center;font-size:11px">${sitLabel(atu)}</div>
+    </div>`;
+  });
+  comp+="</div>";
+  document.getElementById("ck-comparacao").innerHTML=comp;
+  document.getElementById("ck-providencia").value="";
+  // Store context for after
+  document.getElementById("modal-ck-alerta").dataset.diverg=diverg?"1":"0";
+  document.getElementById("modal-ck-alerta").dataset.setorPadrao=setorPadrao||"";
+  document.getElementById("modal-ck-alerta").classList.add("open");
+}
+function confirmarComAlerta(){
+  const prov=document.getElementById("ck-providencia").value.trim();
+  if(!prov){alert("Descreva a providência tomada.");return;}
+  // Salvar providência na ficha
+  if(fichaAtual){
+    const idx=fichas.findIndex(f=>f.num===fichaAtual.num);
+    if(idx>=0) fichas[idx].providenciaChecklist=prov;
+  }
+  const diverg=document.getElementById("modal-ck-alerta").dataset.diverg==="1";
+  const setorPadrao=document.getElementById("modal-ck-alerta").dataset.setorPadrao;
+  fechaModal("modal-ck-alerta");
+  abrirModalConf(diverg,setorPadrao);
+}
+function abrirModalConf(diverg,setorPadrao){
+  document.getElementById("c-nome").value=user.nome||"";document.getElementById("c-grad").value=user.grad||"";
+  document.getElementById("c-rg").value=user.rg||"";document.getElementById("c-id").value=user.idFuncional||"";
+  document.getElementById("c-hint").textContent="Sugestão: "+LOCAL_PAD;
+  document.getElementById("c-local").placeholder=LOCAL_PAD;
+  const avDiv=document.getElementById("conf-div-aviso");
+  const jDiv=document.getElementById("conf-div-just");
+  if(diverg&&fichaAtual){
+    avDiv.innerHTML="⚠️ Esta viatura ("+fichaAtual.prefixo+") tem setor padrão: <strong>"+setorPadrao+"</strong>, mas foi assumida em <strong>"+fichaAtual.setor+"</strong>. Informe a justificativa abaixo.";
+    avDiv.style.display="block";jDiv.style.display="block";
+  } else {avDiv.style.display="none";jDiv.style.display="none";}
+  document.getElementById("modal-conf").classList.add("open");
+}
+function confirmarFicha(){
+  if(!fichaAtual)return;
+  const vtrObj=vtrs.find(v=>v.prefixo.toUpperCase()===fichaAtual.prefixo.toUpperCase());
+  const diverg=vtrObj&&vtrObj.emprego&&fichaAtual.setor!==vtrObj.emprego;
+  const just=document.getElementById("c-just").value.trim();
+  if(diverg&&!just){alert("⚠️ Informe a justificativa para o setor divergente.");return;}
+  const local=document.getElementById("c-local").value.trim()||LOCAL_PAD;
+  const idx=fichas.findIndex(f=>f.num===fichaAtual.num);
+  fichas[idx].confirmado=true;fichas[idx].nomeDesp=document.getElementById("c-nome").value;
+  fichas[idx].gradDesp=document.getElementById("c-grad").value;fichas[idx].rgDesp=document.getElementById("c-rg").value;
+  fichas[idx].idDesp=document.getElementById("c-id").value;fichas[idx].localLib=local;
+  if(just) fichas[idx].justificativaSetor=just;
+  // Comparar checklist com ficha anterior da mesma VTR
+  const ckAlerta=compararChecklist(fichas[idx]);
+  salva();fechaModal("modal-conf");fechaModal("modal-ficha");
+  syncConfirmarFicha(fichas[idx]); // sync automático
+  if(ckAlerta) alert("⚠️ ATENÇÃO — CHECKLIST DIVERGENTE:\n\n"+ckAlerta);
+  renderPainel(painelFiltro);
+}
+
+// ===== EDITAR =====
+function abreEdit(num){
+  const f=fichas.find(x=>x.num===num);if(!f||f.data!==hoje()){alert("Apenas fichas do dia atual podem ser editadas.");return;}
+  fichaAtual=f;
+  document.getElementById("e-nome").value=f.nome;document.getElementById("e-grad").value=f.grad;
+  document.getElementById("e-rg").value=f.rg;document.getElementById("e-km").value=f.kmInicio;
+  document.getElementById("e-setor").value=f.setor||"";document.getElementById("e-alt").value=f.alteracoes||"";
+  document.getElementById("modal-edit").classList.add("open");
+}
+function salvarEdicao(){
+  if(!fichaAtual)return;
+  const idx=fichas.findIndex(f=>f.num===fichaAtual.num);
+  fichas[idx].nome=document.getElementById("e-nome").value;fichas[idx].grad=document.getElementById("e-grad").value;
+  fichas[idx].rg=document.getElementById("e-rg").value;fichas[idx].kmInicio=parseInt(document.getElementById("e-km").value)||fichas[idx].kmInicio;
+  fichas[idx].setor=document.getElementById("e-setor").value;fichas[idx].alteracoes=document.getElementById("e-alt").value;
+  salva();fechaModal("modal-edit");alert("✅ Ficha corrigida!");buscaHist();renderPainel(painelFiltro);renderAdmFichas();
+}
+
+// ===== ADMIN DISTRIBUIÇÃO =====
+function renderDistrib(){
+  const div=document.getElementById("adm-distrib-quadro");
+  if(!div)return;
+  const vtrsOrd=sortVtrs(vtrs);
+
+  function getSit(prefixo){
+    if(!prefixo) return "NONE";
+    const v=vtrs.find(x=>x.prefixo===prefixo);
+    if(!v) return "NONE";
+    if(v.situacao==="BX"||v.situacao==="BX_PEND") return "BX";
+    if(v.situacao==="OF") return "OF";
+    return "ALTA";
+  }
+  function sitBadge(sit){
+    if(sit==="BX") return "<span style='background:#a32d2d;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block'>BAIXADA</span>";
+    if(sit==="OF") return "<span style='background:#5b0e91;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block'>OFICINA</span>";
+    if(sit==="ALTA") return "<span style='background:#2d6a1a;color:#fff;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;display:inline-block'>ALTA</span>";
+    return "<span style='color:#bbb;font-size:11px'>—</span>";
+  }
+  function vtrOpts(selected){
+    let opts='<option value="">— Sem VTR —</option>';
+    vtrsOrd.forEach(v=>{
+      const sit=v.situacao==="BX"?" (BX)":v.situacao==="OF"?" (OF)":"";
+      opts+=`<option value="${v.prefixo}" ${v.prefixo===selected?"selected":""}>${v.prefixo} — ${v.modelo}${sit}</option>`;
+    });
+    return opts;
+  }
+
+  const grupos={};
+  distrib.forEach((d,i)=>{
+    if(!grupos[d.g])grupos[d.g]=[];
+    grupos[d.g].push({...d,_idx:i});
+  });
+
+  let h=`<div style="border:1px solid #ddd;border-radius:8px;overflow:hidden">`;
+  Object.keys(grupos).forEach(g=>{
+    h+=`<div style="background:#e8edf5;color:#1a3a6b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:5px 12px;border-top:.5px solid #d0d8e8;border-bottom:.5px solid #d0d8e8">${g}</div>`;
+    grupos[g].forEach((d,i)=>{
+      const bg=i%2===0?"#fff":"#f8f9fc";
+      const sit=getSit(d.t);
+      const needsReserva=sit==="BX"||sit==="OF";
+      h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:.5px solid #eee;background:${bg};flex-wrap:wrap">
+        <!-- 1. SETOR -->
+        <div style="min-width:120px;font-weight:700;font-size:11px;color:#1a1a1a;flex-shrink:0">${d.s}</div>
+        <!-- 2. PREFIXO (dropdown) -->
+        <div style="flex:1;min-width:180px">
+          <select id="dist-t-${d._idx}"
+            onchange="distribChangeTitular(${d._idx},this.value);document.getElementById('dist-save-'+${d._idx}).style.display='inline-block'"
+            style="width:100%;border:1.5px solid #ccc;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit">
+            ${vtrOpts(d.t)}
+          </select>
+        </div>
+        <!-- 3. SITUAÇÃO select -->
+        <div style="flex-shrink:0">
+          <select id="dist-sit-${d._idx}"
+            onchange="distribChangeSit(${d._idx},this.value);document.getElementById('dist-save-'+${d._idx}).style.display='inline-block'"
+            style="border:1.5px solid #ccc;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;font-weight:700;
+              color:${sit==='BX'?'#a32d2d':sit==='OF'?'#5b0e91':'#2d6a1a'}">
+            <option value="OK" ${sit==="ALTA"?"selected":""} style="color:#2d6a1a">✅ ALTA</option>
+            <option value="BX" ${sit==="BX"?"selected":""} style="color:#a32d2d">🔴 BAIXADA</option>
+            <option value="OF" ${sit==="OF"?"selected":""} style="color:#5b0e91">🔧 OFICINA</option>
+          </select>
+        </div>
+        <!-- 4. RESERVA (só aparece se BX ou OF) -->
+        <div id="dist-res-${d._idx}" style="flex:1;min-width:160px;${needsReserva?"":"display:none"}">
+          <select id="dist-r-${d._idx}"
+            onchange="distrib[${d._idx}].r=this.value;document.getElementById('dist-save-'+${d._idx}).style.display='inline-block'"
+            style="width:100%;border:1.5px solid #c084e0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#5b0e91">
+            ${vtrOpts(d.r)}
+          </select>
+        </div>
+        <!-- 5. SALVAR — só aparece após alteração -->
+        <button id="dist-save-${d._idx}" onclick="salvarDistribLinha(${d._idx})"
+          style="background:#2d6a1a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;display:none">
+          💾 Salvar
+        </button>
+      </div>`;
+    });
+  });
+  h+="</div>";
+  div.innerHTML=h;
+}
+
+function distribChangeSit(idx, sit){
+  const v=vtrs.find(x=>x.prefixo===distrib[idx].t);
+  if(!v){alert("Selecione uma VTR titular primeiro.");
+    document.getElementById("dist-sit-"+idx).value="OK";return;}
+  v.situacao=sit;
+  if(sit==="OK") delete v.baixaRegistro;
+  const needsReserva=sit==="BX"||sit==="OF";
+  const resDiv=document.getElementById("dist-res-"+idx);
+  if(resDiv) resDiv.style.display=needsReserva?"":"none";
+  if(!needsReserva) distrib[idx].r="";
+  // Update select color
+  const sel=document.getElementById("dist-sit-"+idx);
+  if(sel) sel.style.color=sit==="BX"?"#a32d2d":sit==="OF"?"#5b0e91":"#2d6a1a";
+  salva();
+  renderDistrib();
+}
+function distribChangeTitular(idx, prefixo){
+  distrib[idx].t=prefixo;
+  // Show/hide reserva field based on situacao
+  const v=vtrs.find(x=>x.prefixo===prefixo);
+  const sit=v?v.situacao:"";
+  const needsReserva=sit==="BX"||sit==="BX_PEND"||sit==="OF";
+  const resDiv=document.getElementById("dist-res-"+idx);
+  if(resDiv) resDiv.style.display=needsReserva?"":"none";
+  if(!needsReserva) distrib[idx].r="";
+  // Re-render just this row's badge by re-rendering all
+  renderDistrib();
+}
+
+
+function salvarDistribLinha(idx){
+  lss("pm_distrib",JSON.stringify(distrib));
+  salva();
+  renderDistrib();
+  renderQuadroDespachante();
+}
+
+
+function renderAdmVtrs(){
+  const div=document.getElementById("adm-vtrs-cards");
+  if(!div)return;
+  const busca=(document.getElementById("busca-vtr-adm")?.value||"").trim().toUpperCase();
+
+  // Group by model
+  const MODELOS_ORD=[
+    {key:"RANGER",  label:"🚙 Ranger"},
+    {key:"HILUX",   label:"🚙 Hilux"},
+    {key:"COROLLA", label:"🚗 Corolla"},
+    {key:"VERSA",   label:"🚗 Versa"},
+    {key:"DUSTER",  label:"🚗 Duster"},
+    {key:"FORD KA", label:"🚗 Ford Ka"},
+    {key:"BOXER",   label:"🚐 Boxer"},
+    {key:"XRE 300", label:"🏍 Moto Patrulha"},
+    {key:"OUTROS",  label:"🚘 Outros"},
+  ];
+
+  const grupos={};
+  MODELOS_ORD.forEach(m=>grupos[m.key]=[]);
+
+  // Build setor map from distrib
+  const setorMap={};
+  distrib.forEach(d=>{if(d.t)setorMap[d.t]=d;});
+
+  sortVtrs(vtrs).forEach(v=>{
+    if(busca&&!v.prefixo.toUpperCase().includes(busca)&&
+       !v.modelo.toUpperCase().includes(busca)&&
+       !(v.emprego||"").toUpperCase().includes(busca)&&
+       !(setorMap[v.prefixo]?setorMap[v.prefixo].s:"").toUpperCase().includes(busca))return;
+    const g=getModeloGrupo(v.modelo);
+    const key=MODELOS_ORD.find(m=>m.key===g)?g:"OUTROS";
+    grupos[key].push(v);
+  });
+
+  function vtrOpts(selected){
+    let o='<option value="">— Sem reserva —</option>';
+    sortVtrs(vtrs).forEach(x=>{
+      if(x.prefixo===selected||!setorMap[x.prefixo]){
+        const sit=x.situacao==="BX"?" (BX)":x.situacao==="OF"?" (OF)":"";
+        o+=`<option value="${x.prefixo}"${x.prefixo===selected?" selected":""}>${x.prefixo} — ${x.modelo}${sit}</option>`;
+      }
+    });
+    return o;
+  }
+
+  let h="";
+  MODELOS_ORD.forEach(({key,label})=>{
+    const itens=grupos[key];
+    if(!itens.length)return;
+
+    h+=`<div style="font-size:11px;font-weight:700;color:#1a3a6b;text-transform:uppercase;
+      letter-spacing:.5px;padding:6px 12px;background:#e8edf5;border-radius:7px;
+      margin-bottom:8px;margin-top:14px;border-left:4px solid #1a3a6b">
+      ${label} (${itens.length})
+    </div>`;
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">';
+
+    itens.forEach(v=>{
+      const d=setorMap[v.prefixo];
+      const distIdx=d?distrib.indexOf(d):-1;
+      const sit=v.situacao==="BX"||v.situacao==="BX_PEND"?"BX":v.situacao==="OF"?"OF":"ALTA";
+      const setor=d?d.s:(v.emprego||"");
+      const needsReserva=sit==="BX"||sit==="OF";
+      const resVal=d?d.r:"";
+
+      const borderTop=sit==="BX"?"#a32d2d":sit==="OF"?"#5b0e91":!setor?"#c8a227":"#2d6a1a";
+      const borderColor=sit==="BX"?"#f5c6cb":sit==="OF"?"#d4b8f0":!setor?"#ffeeba":"#c3e6cb";
+      const prefColor=sit==="BX"?"#a32d2d":sit==="OF"?"#5b0e91":!setor?"#c8a227":"#1a3a6b";
+      const sitColor=sit==="BX"?"color:#a32d2d":sit==="OF"?"color:#5b0e91":"color:#2d6a1a";
+      const setorLabel=setor?`<span style="font-size:9px;background:#e8edf5;color:#1a3a6b;border-radius:3px;padding:1px 5px;font-weight:700">${setor}</span>`:
+        `<span style="font-size:9px;background:#fff8e6;color:#c8a227;border-radius:3px;padding:1px 5px;font-weight:700;border:1px solid #ffeeba">RESERVA</span>`;
+
+      const resStyle=sit==="OF"?"background:#f5edfb;":"background:#fff8e6;";
+      const resLblColor=sit==="OF"?"color:#5b0e91":"color:#c8a227";
+      const resSelStyle=sit==="OF"?"border-color:#d4b8f0;color:#5b0e91":"border-color:#ffeeba;color:#856404";
+
+      h+=`<div style="border:1.5px solid ${borderColor};border-top:3px solid ${borderTop};border-radius:10px;overflow:hidden;background:#fff">
+        <div style="padding:10px 12px;border-bottom:.5px solid #eee">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:20px;font-weight:700;color:${prefColor};letter-spacing:.5px">${v.prefixo}</div>
+            ${setorLabel}
+          </div>
+          <div style="font-size:10px;color:#888">${v.modelo}${v.placa?" · "+v.placa:""}</div>
+        </div>
+        <div style="padding:6px 10px;border-bottom:.5px solid #eee;display:flex;align-items:center;gap:8px">
+          <label style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap">Situação</label>
+          <select onchange="admVtrChangeSit('${v.prefixo}',this.value,${distIdx})"
+            style="flex:1;border:1.5px solid #ccc;border-radius:5px;padding:4px 6px;font-size:11px;font-family:inherit;font-weight:700;${sitColor}">
+            <option value="OK" ${sit==="ALTA"?"selected":""}>✅ ALTA</option>
+            <option value="BX" ${sit==="BX"?"selected":""}>🔴 BAIXADA</option>
+            <option value="OF" ${sit==="OF"?"selected":""}>🔧 OFICINA</option>
+          </select>
+        </div>
+        ${needsReserva?`<div style="padding:5px 10px;border-bottom:.5px solid #eee;${resStyle}display:flex;align-items:center;gap:8px">
+          <label style="font-size:10px;font-weight:700;${resLblColor};text-transform:uppercase;letter-spacing:.3px;white-space:nowrap">Reserva</label>
+          <select onchange="${distIdx>=0?'distrib['+distIdx+'].r=this.value;lss("pm_distrib",JSON.stringify(distrib))':''}"
+            style="flex:1;border:1.5px solid #ccc;border-radius:5px;padding:4px 6px;font-size:11px;font-family:inherit;${resSelStyle}">
+            ${vtrOpts(resVal)}
+          </select>
+        </div>`:""}
+        ${sit==="BX"&&v.motivo?`<div style="padding:4px 10px;font-size:10px;color:#a32d2d;background:#fff8f8;border-bottom:.5px solid #eee">${v.motivo.substring(0,50)}</div>`:""}
+        <div style="padding:7px 8px;display:flex;gap:4px;flex-wrap:wrap;background:#fafafa">
+          <button onclick="abreSitVtr('${v.prefixo}')" style="background:#f0f4fb;color:#1a3a6b;border:1px solid #c8d8f0;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">✏️ Situação</button>
+          <button onclick="abreManutAdmin('${v.prefixo}')" style="background:#f0f4fb;color:#1a3a6b;border:1px solid #c8d8f0;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">🔧 Manutenção</button>
+          <button onclick="moverDesfazimento('${v.prefixo}')" style="background:#fff8e6;color:#856404;border:1px solid #ffeeba;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">♻️ Desf.</button>
+          <button onclick="remVtr(vtrs.indexOf(vtrs.find(x=>x.prefixo==='${v.prefixo}')))" style="background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:5px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer">🗑</button>
+        </div>
+      </div>`;
+    });
+    h+="</div>";
+  });
+
+  div.innerHTML=h||"<p style='text-align:center;color:#888;padding:2rem'>Nenhuma viatura encontrada.</p>";
+}
+
+function admVtrChangeSit(prefixo,sit,distIdx){
+  const idx=vtrs.findIndex(v=>v.prefixo===prefixo);
+  if(idx<0)return;
+  vtrs[idx].situacao=sit;
+  if(sit==="OK"){delete vtrs[idx].baixaRegistro;}
+  else if(!vtrs[idx].baixaRegistro){
+    vtrs[idx].baixaRegistro={data:hoje(),hora:pad2(new Date().getHours())+":"+pad2(new Date().getMinutes()),nome:user?((user.grad||"")+" "+(user.nome||"")):"Admin",rg:user?user.rg||"":""};
+  }
+  salva();
+  renderAdmVtrs();
+  renderPainel(painelFiltro);
+}
+
+
+function remVtr(i){
+  if(!confirm("Remover "+vtrs[i].prefixo+"?"))return;
+  vtrs.splice(i,1);salva();renderAdmVtrs();
+}
+function moverDesfazimento(prefixo){
+  const idx=vtrs.findIndex(v=>v.prefixo===prefixo);
+  if(idx<0)return;
+  const v=vtrs[idx];
+  if(!confirm("Mover a viatura "+prefixo+" ("+v.modelo+") para o processo de desfazimento?\n\nEla será removida do quadro operacional.")) return;
+  desfazimento.push({prefixo:v.prefixo,modelo:v.modelo,placa:v.placa||"",emprego:v.emprego||"",dataMov:hoje(),processo:"",observacoes:""});
+  vtrs.splice(idx,1);
+  salva();renderAdmVtrs();
+  alert("✅ Viatura "+prefixo+" movida para desfazimento.");
+}
+
+function renderAdmOficina(){
+  const ofVtrs=sortVtrs(vtrs.filter(v=>v.situacao==="OF"));
+  const div=document.getElementById("adm-oficina-lista");
+  if(!ofVtrs.length){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhuma viatura em oficina credenciada.</p>";return;}
+  div.innerHTML=ofVtrs.map(v=>{
+    const histOf=manutencoes.filter(m=>m.prefixo===v.prefixo&&(m.tipo==="ENVIO_OFICINA"||m.tipo==="MANUT_MECANICO")).slice(-5).reverse();
+    return`<div style="border:1.5px solid #c084e0;border-radius:10px;padding:14px;margin-bottom:10px;background:#faf5ff;border-left:4px solid #5b0e91">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div>
+          <p style="font-size:15px;font-weight:700;margin-bottom:4px"><strong>${v.prefixo}</strong> · ${v.modelo}${v.placa?" · "+v.placa:""}</p>
+          ${v.oficina?`<p style="font-size:13px;color:#5b0e91;font-weight:600;margin-bottom:3px">🔧 ${v.oficina}</p>`:""}
+          ${v.oficinaEnd?`<p style="font-size:12px;color:#777;margin-bottom:3px">📍 ${v.oficinaEnd}</p>`:""}
+          ${v.os?`<p style="font-size:12px;color:#555;margin-bottom:3px">📋 OS: <strong>${v.os}</strong></p>`:""}
+          ${v.dataEntregaOficina?`<p style="font-size:12px;color:#555;margin-bottom:3px">📅 Entrega: <strong>${fmtD(v.dataEntregaOficina)}</strong></p>`:""}
+          ${v.dataRetornoOficina?`<p style="font-size:12px;color:#155724;margin-bottom:3px">🔙 Retorno previsto: <strong>${fmtD(v.dataRetornoOficina)}</strong></p>`:""}
+          ${v.motivo?`<p style="font-size:12px;color:#888">${v.motivo}</p>`:""}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btnedit" style="font-size:11px;padding:6px 10px" onclick="abreSitVtr('${v.prefixo}')">✏️ Atualizar</button>
+          <button class="btns" style="font-size:11px;padding:6px 10px" onclick="abreManutAdmin('${v.prefixo}')">🔧 Registrar</button>
+          <button class="btnd" style="font-size:11px;padding:6px 10px" onclick="removerOficina('${v.prefixo}')">🗑 Excluir</button>
+        </div>
+      </div>
+      ${histOf.length?`<div style="border-top:1px solid #e0cff5;margin-top:8px;padding-top:7px">
+        <p style="font-size:10px;font-weight:700;color:#5b0e91;margin-bottom:4px">ÚLTIMOS REGISTROS</p>
+        ${histOf.map(m=>`<p style="font-size:11px;color:#555;margin-bottom:3px">${fmtD(m.data)} ${m.hora||""} · ${m.descricao||m.tipo||""}</p>`).join("")}
+      </div>`:""}
+    </div>`;
+  }).join("");
+}
+
+const TIPO_LABELS={"SERVICO_INTERNO":"📝 Serviço interno","MANUT_MECANICO":"🔧 Mecânico","BAIXA_MOTORISTA":"🔴 Baixa motorista","ENVIO_OFICINA":"🏭 Envio à oficina","RETORNO_OFICINA":"✅ Retorno oficina"};
+function renderHistoricoAdmin(){
+  const prefFil=(document.getElementById("hist-pref")?.value||"").trim().toUpperCase();
+  const tipoFil=document.getElementById("hist-tipo")?.value||"";
+  let lista=manutencoes.slice().reverse();
+  if(prefFil) lista=lista.filter(m=>m.prefixo.toUpperCase().includes(prefFil));
+  if(tipoFil) lista=lista.filter(m=>m.tipo===tipoFil);
+  const div=document.getElementById("adm-historico-lista");
+  if(!lista.length){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhum registro encontrado.</p>";return;}
+  div.innerHTML=lista.map(m=>{
+    const cor=m.tipo==="BAIXA_MOTORISTA"?"#721c24":m.tipo==="ENVIO_OFICINA"||m.tipo==="RETORNO_OFICINA"?"#5b0e91":m.tipo==="MANUT_MECANICO"?"#155724":"#004085";
+    return`<div class="frow">
+      <div class="finfo">
+        <p><strong>${m.prefixo}</strong> ${m.modelo||""} · <span style="color:${cor}">${TIPO_LABELS[m.tipo]||m.tipo}</span></p>
+        <small>${fmtD(m.data)} ${m.hora||""} · ${m.descricao||m.motivo||""}</small>
+        ${m.oficina?`<small>Oficina: ${m.oficina}${m.os?" · OS: "+m.os:""}</small>`:""}
+        ${m.mecanico?`<small>Mecânico: ${m.mecanico}</small>`:""}
+        <small style="color:#aaa">Lançado por: ${m.registradoPor||""} ${m.rg?"· RG "+m.rg:""}</small>
+      </div>
+      <span style="font-size:10px;color:${cor};font-weight:700;flex-shrink:0">${(m.tipo||"").replace("_"," ")}</span>
+    </div>`;
+  }).join("");
+}
+
+// ===== ADMIN DESPS =====
+function addDesp(){
+  const nome=document.getElementById("ad-nome").value.trim();const grad=document.getElementById("ad-grad").value;
+  const rg=document.getElementById("ad-rg").value.trim();const idF=document.getElementById("ad-id").value.trim();const senha=document.getElementById("ad-senha").value.trim();
+  if(!nome||!rg||!senha){alert("Nome, RG e senha obrigatórios.");return;}
+  if(desps.find(d=>d.rg===rg)){alert("RG já cadastrado.");return;}
+  desps.push({nome,grad,rg,idFuncional:idF,senha});salva();
+  ["ad-nome","ad-rg","ad-id","ad-senha"].forEach(id=>document.getElementById(id).value="");document.getElementById("ad-grad").value="";renderDesps();
+}
+function renderDesps(){
+  const div=document.getElementById("lista-desps");
+  if(!desps.length){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhum despachante.</p>";return;}
+  div.innerHTML=desps.map((d,i)=>`<div class="frow"><div class="finfo"><p>${d.grad||""} ${d.nome}</p><small>RG: ${d.rg} · ID: ${d.idFuncional||"—"}</small></div><button class="btnd" onclick="remDesp(${i})">🗑</button></div>`).join("");
+}
+function remDesp(i){if(!confirm("Remover "+desps[i].nome+"?"))return;desps.splice(i,1);salva();renderDesps();}
+
+// ===== MANUTENÇÃO =====
+function abreManut(prefixo){
+  const v=vtrs.find(x=>x.prefixo.toUpperCase()===prefixo.toUpperCase());
+  if(!v)return;
+  document.getElementById("manut-titulo").textContent="Registrar Manutenção — "+prefixo+" ("+v.modelo+")";
+  document.getElementById("mn-pref").value=prefixo;
+  document.getElementById("mn-data").value=hoje();
+  const ag=new Date();
+  document.getElementById("mn-hora").value=pad2(ag.getHours())+":"+pad2(ag.getMinutes());
+  document.getElementById("mn-tipo").value="";
+  document.getElementById("mn-desc").value="";
+  document.getElementById("mn-resp").value=user?(user.grad||"")+" "+(user.nome||""):"";
+  document.getElementById("mn-rg").value=user?user.rg||"":"";
+  document.getElementById("mn-oficina").value=v.oficina||"";
+  document.getElementById("mn-custo").value="";
+  document.getElementById("modal-manut").classList.add("open");
+}
+function salvarManutencao(){
+  const pref=document.getElementById("mn-pref").value.trim().toUpperCase();
+  const tipo=document.getElementById("mn-tipo").value;
+  const desc=document.getElementById("mn-desc").value.trim();
+  if(!tipo||!desc){alert("Selecione o tipo e descreva o serviço realizado.");return;}
+  const custo=parseFloat(document.getElementById("mn-custo").value)||0;
+  manutencoes.push({
+    id:Date.now(),
+    prefixo:pref,
+    modelo:(vtrs.find(v=>v.prefixo.toUpperCase()===pref)||{}).modelo||"",
+    data:document.getElementById("mn-data").value,
+    hora:document.getElementById("mn-hora").value,
+    tipo,desc,
+    resp:document.getElementById("mn-resp").value.trim(),
+    rg:document.getElementById("mn-rg").value.trim(),
+    oficina:document.getElementById("mn-oficina").value.trim(),
+    custo
+  });
+  salva();
+  fechaModal("modal-manut");
+  alert("✅ Manutenção registrada com sucesso!");
+}
+function abreHistManut(prefixo){
+  const v=vtrs.find(x=>x.prefixo.toUpperCase()===prefixo.toUpperCase());
+  document.getElementById("hm-titulo").textContent="Histórico de Manutenção — "+prefixo+(v?" ("+v.modelo+")":"");
+  const lista=manutencoes.filter(m=>m.prefixo.toUpperCase()===prefixo.toUpperCase());
+  const div=document.getElementById("hm-body");
+  if(!lista.length){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1.5rem'>Nenhum registro de manutenção para esta viatura.</p>";document.getElementById("modal-hist-manut").classList.add("open");return;}
+  div.innerHTML=lista.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(m=>`
+    <div style="border:.5px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid #5b0e91">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <strong style="font-size:13px;color:#1a3a6b">${m.tipo}</strong>
+        <span style="font-size:11px;color:#888">${fmtD(m.data)}${m.hora?" · "+m.hora:""}</span>
+      </div>
+      <p style="font-size:13px;color:#333;margin-bottom:4px;line-height:1.5">${m.desc}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#666">
+        ${m.resp?"<span>👤 "+m.resp+(m.rg?" · RG "+m.rg:"")+"</span>":""}
+        ${m.oficina?"<span>🔧 "+m.oficina+"</span>":""}
+        ${m.custo>0?"<span>💰 R$ "+m.custo.toFixed(2)+"</span>":""}
+      </div>
+    </div>`).join("");
+  document.getElementById("modal-hist-manut").classList.add("open");
+}
+
+// ===== ADMIN FICHAS =====
+function renderAdmFichas(){
+  const lista=getFichasFiltradas();
+  const cnt=document.getElementById("fil-count");
+  if(cnt) cnt.textContent=lista.length+" ficha"+(lista.length!==1?"s":"")+" encontrada"+(lista.length!==1?"s":"");
+  const div=document.getElementById("adm-fichas");
+  if(!lista.length){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhuma ficha.</p>";return;}
+  div.innerHTML=lista.map(f=>`<div class="frow">
+    <div class="finfo">
+      <p>#${f.num} · <strong>${f.prefixo}</strong> ${f.modelo||""} · ${f.setor||""}</p>
+      <small>${f.grad} ${f.nome} · ${fmtD(f.data)} ${f.hora} · KM ${f.kmInicio}${f.kmFinal?" → "+f.kmFinal:""}</small>
+      <div class="ftags">${f.confirmado?"<span class='bok'>✓ Conf.</span>":"<span class='bpend'>Pendente</span>"}${f.alteracoes?"<span class='balt'>⚠️</span>":""}</div>
+    </div>
+    <div class="fbtns">
+      <button class="btns" style="padding:7px 10px;font-size:12px" onclick="abreModal('${f.num}','admin')">Ver</button>
+      ${f.data===hoje()?"<button class='btnedit' onclick='abreEdit(\""+f.num+"\")'>✏️</button>":""}
+      <button class="btnd" style="padding:7px 10px;font-size:12px" onclick="excluirFicha(this.dataset.num)" data-num="${f.num}" title="Excluir ficha">🗑</button>
+    </div>
+  </div>`).join("");
+}
+function limFiltros(){
+  ["fil-data","fil-data-fim","fil-pref","fil-militar"].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value="";
+  });
+  ["fil-modelo","fil-setor"].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.selectedIndex=0;
+  });
+  renderAdmFichas();
+}
+function limFiltrosManut(){
+  document.getElementById("mfil-pref").value="";
+  document.getElementById("mfil-tipo").value="";
+  document.getElementById("mfil-data").value="";
+  renderAdmManut();
+}
+function renderAdmManut(){
+  const pf=(document.getElementById("mfil-pref").value||"").trim().toUpperCase();
+  const tp=document.getElementById("mfil-tipo").value;
+  const dt=document.getElementById("mfil-data").value;
+  let lista=manutencoes.slice();
+  if(pf) lista=lista.filter(m=>m.prefixo.includes(pf));
+  if(tp) lista=lista.filter(m=>m.tipo===tp);
+  if(dt) lista=lista.filter(m=>m.data===dt);
+  lista.sort((a,b)=>b.data.localeCompare(a.data)||b.id-a.id);
+  const div=document.getElementById("adm-manut");
+  if(!lista.length){div.innerHTML="<p style='font-size:14px;color:#888;text-align:center;padding:1rem'>Nenhum registro encontrado.</p>";return;}
+  div.innerHTML=lista.map(m=>`
+    <div style="border:.5px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:7px;border-left:3px solid #5b0e91">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px;margin-bottom:4px">
+        <div>
+          <strong style="font-size:13px;color:#1a3a6b">${m.prefixo}</strong>
+          <span style="font-size:11px;color:#555;margin-left:6px">${m.modelo||""}</span>
+          <span class="bof" style="font-size:10px;margin-left:6px">${m.tipo}</span>
+        </div>
+        <span style="font-size:11px;color:#888">${fmtD(m.data)}${m.hora?" · "+m.hora:""}</span>
+      </div>
+      <p style="font-size:13px;color:#333;margin-bottom:5px;line-height:1.5">${m.desc}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#666">
+        ${m.resp?"<span>👤 "+m.resp+(m.rg?" · RG "+m.rg:"")+"</span>":""}
+        ${m.oficina?"<span>🔧 "+m.oficina+"</span>":""}
+        ${m.custo>0?"<span>💰 R$ "+m.custo.toFixed(2)+"</span>":""}
+      </div>
+    </div>`).join("");
+}
+function exportarManut(){
+  if(!manutencoes.length){alert("Nenhum registro para exportar.");return;}
+  const cab="Prefixo,Modelo,Data,Hora,Tipo,Descrição,Responsável,RG,Oficina,Custo\n";
+  const linhas=manutencoes.map(m=>[m.prefixo,m.modelo||"",fmtD(m.data),m.hora||"",m.tipo,(m.desc||"").replace(/,/g,";"),m.resp||"",m.rg||"",m.oficina||"",m.custo||0].join(",")).join("\n");
+  const blob=new Blob([cab+linhas],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="manutencoes_pmerj.csv";a.click();
+}
+function getFichasFiltradas(){
+  const df=(document.getElementById("fil-data")?.value||"");
+  const dff=(document.getElementById("fil-data-fim")?.value||"");
+  const pf=(document.getElementById("fil-pref")?.value||"").trim().toUpperCase();
+  const mod=(document.getElementById("fil-modelo")?.value||"").toUpperCase();
+  const set=(document.getElementById("fil-setor")?.value||"").toUpperCase();
+  const mil=(document.getElementById("fil-militar")?.value||"").trim().toUpperCase();
+  let lista=fichas;
+  if(df)  lista=lista.filter(f=>f.data>=df);
+  if(dff) lista=lista.filter(f=>f.data<=dff);
+  if(pf)  lista=lista.filter(f=>f.prefixo.toUpperCase().includes(pf));
+  if(mod) lista=lista.filter(f=>(f.modelo||"").toUpperCase().includes(mod));
+  if(set) lista=lista.filter(f=>(f.setor||"").toUpperCase()===set);
+  if(mil) lista=lista.filter(f=>String(f.rg).includes(mil)||f.nome.toUpperCase().includes(mil));
+  return lista;
+}
+
+function exportarFichasCSV(){
+  const lista=getFichasFiltradas();
+  if(!lista.length){alert("Nenhuma ficha encontrada para o período selecionado.");return;}
+  const cab="Num,Data,Hora,Prefixo,Modelo,Placa,Setor,Grad,Nome,RG,KM_Inicio,KM_Final,Confirmado,Despachante,RG_Desp,Local_Lib,Alteracoes\n";
+  const linhas=lista.map(f=>[
+    f.num,f.data,f.hora,f.prefixo,f.modelo||"",f.placa||"",f.setor||"",
+    f.grad,f.nome,f.rg,f.kmInicio,f.kmFinal||"",
+    f.confirmado?"Sim":"Não",f.nomeDesp||"",f.rgDesp||"",f.localLib||"",
+    (f.alteracoes||"").replace(/,/g,";").replace(/\n/g," ")
+  ].join(",")).join("\n");
+  const blob=new Blob(["﻿"+cab+linhas],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  const df=document.getElementById("fil-data")?.value||"";
+  const dff=document.getElementById("fil-data-fim")?.value||"";
+  a.download="fichas_pmerj"+(df?"_"+df:"")+(dff?"_a_"+dff:"")+".csv";
+  a.click();
+  URL.revokeObjectURL(url);
+  alert("✅ "+lista.length+" fichas exportadas para CSV!\nAbra no Excel para visualizar.");
+}
+
+function exportarFichasPDF(){
+  const lista=getFichasFiltradas();
+  if(!lista.length){alert("Nenhuma ficha encontrada para o período selecionado.");return;}
+  const df=document.getElementById("fil-data")?.value||"";
+  const dff=document.getElementById("fil-data-fim")?.value||"";
+  const periodo=df&&dff?fmtD(df)+" a "+fmtD(dff):df?fmtD(df):"Todas as fichas";
+  const BR="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png/250px-Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png";
+
+  const w=window.open("","_blank","width=1000,height=750");
+  const ckLabels={"radio":"Rádio","giroflex":"Giroflex","sirene":"Sirene","estepe":"Estepe","macaco":"Macaco","triangulo":"Triângulo","chaveRoda":"Ch.Roda"};
+  
+  const rows=lista.map(f=>{
+    const ck=f.checklist||{};
+    const ckStr=Object.keys(ckLabels).map(k=>{
+      const v=ck[k]||"";
+      const c=v==="OK"?"#155724":v==="BX"?"#721c24":"#888";
+      const l=v==="OK"?"✅":v==="BX"?"❌":v==="NP"?"—":"?";
+      return`<span style="color:${c};font-size:10px">${ckLabels[k]}:${l}</span>`;
+    }).join(" · ");
+    return`<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:5px 8px;font-weight:700;color:#1a3a6b">#${f.num}</td>
+      <td style="padding:5px 8px">${fmtD(f.data)}</td>
+      <td style="padding:5px 8px">${f.hora}</td>
+      <td style="padding:5px 8px;font-weight:700">${f.prefixo}</td>
+      <td style="padding:5px 8px">${f.modelo||""}</td>
+      <td style="padding:5px 8px">${f.setor||""}</td>
+      <td style="padding:5px 8px">${f.grad} ${f.nome}</td>
+      <td style="padding:5px 8px">RG ${f.rg}</td>
+      <td style="padding:5px 8px">${f.kmInicio}${f.kmFinal?" → "+f.kmFinal:""}</td>
+      <td style="padding:5px 8px"><span style="color:${f.confirmado?"#155724":"#856404"};font-weight:700">${f.confirmado?"✅ Conf.":"⏳ Pend."}</span></td>
+      <td style="padding:5px 8px;font-size:10px">${ckStr}</td>
+      <td style="padding:5px 8px;font-size:10px;color:#a32d2d">${f.alteracoes||""}</td>
+    </tr>`;
+  }).join("");
+
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+  <title>Fichas PMERJ — ${periodo}</title>
+  <style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+  body{background:#555;padding:14px}
+  .pg{background:#fff;max-width:1100px;margin:0 auto;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{background:#1a3a6b;color:#fff;padding:7px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+  tr:nth-child(even){background:#f8f9fc}
+  .header{display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #c8a227}
+  .brasao{width:50px;height:50px;background:url("${BR}") center/contain no-repeat;flex-shrink:0}
+  .bimpr{display:block;margin:0 auto 14px;padding:9px 22px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
+  .resumo{display:flex;gap:20px;margin-bottom:14px;padding:10px;background:#e8edf5;border-radius:8px}
+  .r-item{text-align:center}<br>.r-num{font-size:20px;font-weight:700;color:#1a3a6b}.r-lbl{font-size:10px;color:#888;text-transform:uppercase}
+  @media print{body{background:#fff;padding:0}.bimpr{display:none}}
+  </style></head><body>
+  <button class="bimpr" onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
+  <div class="pg">
+    <div class="header">
+      <div class="brasao"></div>
+      <div>
+        <div style="font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.5px">Governo do Estado do Rio de Janeiro · Sec. de Estado de Polícia Militar</div>
+        <div style="font-size:16px;font-weight:700;color:#1a3a6b">13ª UPP / 16º BPM — Complexo da Penha</div>
+        <div style="font-size:12px;color:#555">Relatório de Fichas de Circulação de Viatura</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">Período: <strong>${periodo}</strong></div>
+      </div>
+    </div>
+    <div class="resumo">
+      <div class="r-item"><div class="r-num">${lista.length}</div><div class="r-lbl">Total de fichas</div></div>
+      <div class="r-item"><div class="r-num">${lista.filter(f=>f.confirmado).length}</div><div class="r-lbl">Confirmadas</div></div>
+      <div class="r-item"><div class="r-num">${lista.filter(f=>!f.confirmado).length}</div><div class="r-lbl">Pendentes</div></div>
+      <div class="r-item"><div class="r-num">${new Set(lista.map(f=>f.prefixo)).size}</div><div class="r-lbl">VTRs diferentes</div></div>
+      <div class="r-item"><div class="r-num">${new Set(lista.map(f=>f.rg)).size}</div><div class="r-lbl">Militares</div></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Nº</th><th>Data</th><th>Hora</th><th>Prefixo</th><th>Modelo</th>
+        <th>Setor</th><th>Motorista</th><th>RG</th><th>KM</th>
+        <th>Status</th><th>Checklist</th><th>Alterações</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="margin-top:12px;font-size:10px;color:#888;text-align:center;border-top:1px solid #ddd;padding-top:8px">
+      PMERJ · 13ª UPP / 16º BPM — Complexo da Penha · Gerado em ${new Date().toLocaleString("pt-BR")} · Total: ${lista.length} fichas
+    </div>
+  </div>
+  <script>window.onload=()=>{}<\/script>
+  </body></html>`);
+  w.document.close();
+}
+
+function excluirFicha(num){
+  const numStr=String(num);
+  const idx=fichas.findIndex(f=>String(f.num)===numStr);
+  if(idx<0){alert("Ficha #"+numStr+" não encontrada. Tente recarregar a página.");return;}
+  const f=fichas[idx];
+  if(!confirm("Excluir a ficha #"+numStr+"?\n"+f.grad+" "+f.nome+" · "+f.prefixo+" · "+fmtD(f.data)+"\n\nA numeração será reajustada automaticamente.")) return;
+  fichas.splice(idx,1);
+  fichas.forEach((f,i)=>{f.num=String(ordemOfs+i+1).padStart(3,"0");});
+  salva();
+  renderAdmFichas();
+  alert("✅ Ficha excluída! Numeração reajustada.");
+}
+
+// ===== CONFIG =====
+function loadCfg(){
+  document.getElementById("cfg-url").value=SCRIPT_URL;document.getElementById("cfg-local").value=LOCAL_PAD;
+  document.getElementById("sync-txt").textContent=SCRIPT_URL?"✅ URL configurado.":"⚠️ Dados salvos localmente.";
+  const proxNum=ordemOfs+fichas.length+1;
+  const el=document.getElementById("cfg-num-inicio");
+  if(el) el.placeholder="Próxima: #"+String(proxNum).padStart(3,"0");
+}
+function saveCfg(){
+  SCRIPT_URL=document.getElementById("cfg-url").value.trim();LOCAL_PAD=document.getElementById("cfg-local").value.trim();
+  lss("pm_url",SCRIPT_URL);lss("pm_local",LOCAL_PAD);
+  const np=document.getElementById("cfg-pass").value.trim();if(np){ADMIN_PASS=np;lss("pm_apass",np);document.getElementById("cfg-pass").value="";}
+  document.getElementById("cfg-ok").style.display="block";setTimeout(()=>document.getElementById("cfg-ok").style.display="none",3000);
+}
+function reiniciarOrdem(){
+  if(!confirm("Reiniciar numeração? Próximo será #001."))return;
+  ordemOfs=-(fichas.length);lss("pm_ofs",String(ordemOfs));
+  document.getElementById("ordem-ok").style.display="block";setTimeout(()=>document.getElementById("ordem-ok").style.display="none",3000);
+}
+function definirNumeracao(){
+  const val=parseInt(document.getElementById("cfg-num-inicio").value);
+  if(isNaN(val)||val<1){alert("Digite um número válido maior que zero.");return;}
+  if(!confirm("Definir próxima ficha como #"+String(val).padStart(3,"0")+"?\n\nFichas existentes não serão alteradas."))return;
+  ordemOfs=val-fichas.length-1;
+  lss("pm_ofs",String(ordemOfs));
+  document.getElementById("cfg-num-inicio").value="";
+  document.getElementById("ordem-ok").style.display="block";
+  setTimeout(()=>document.getElementById("ordem-ok").style.display="none",3000);
+}
+async function testarConn(){
+  if(!SCRIPT_URL){alert("Configure a URL primeiro.");return;}
+  try{const r=await fetch(SCRIPT_URL+"?action=ping");const d=await r.json();alert(d.status==="ok"?"✅ OK!":"Resposta: "+JSON.stringify(d));}catch(e){alert("❌ Erro: "+e.message);}
+}
+
+// ===== IMPRESSÃO =====
+function imprimirFicha(){
+  if(!fichaAtual)return;const f=fichaAtual;const dt=fmtD(f.data);
+  const BR="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png/250px-Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png";
+  const ckR=CK.map(it=>{const v=f.checklist?f.checklist[it.key]:"";const l=v==="OK"?"OK":v==="BX"?"PROBLEMA":v==="NP"?"NÃO POSSUI":"—";const c=v==="OK"?"#155724":v==="BX"?"#721c24":"#888";return`<tr><td style="padding:2px 5px;border-right:.5px solid #ddd">${it.label}</td><td style="padding:2px 5px;font-weight:700;color:${c}">${l}</td></tr>`;}).join("");
+  const w=window.open("","_blank","width=950,height=750");
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ficha ${f.num}</title><style>
+  *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:10px;background:#fff}
+  @page{size:A4 portrait;margin:6mm} body{font-size:8.5px}
+  .pg{width:100%;position:relative;margin-bottom:8px}
+  .pg::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:230px;height:230px;background-image:url("${BR}");background-repeat:no-repeat;background-position:center;background-size:contain;opacity:.05;z-index:0;}
+  .ficha{border:2px solid #000;width:100%;position:relative;z-index:1}
+  .fh{display:flex;border-bottom:2px solid #000;min-height:60px}
+  .fhpm{width:165px;border-right:2px solid #000;padding:5px 6px}
+  .bsm{width:30px;height:30px;float:left;margin-right:5px;background-image:url("${BR}");background-repeat:no-repeat;background-position:center;background-size:contain;}
+  .flogo{font-size:7px;font-weight:700;color:#1a3a6b;line-height:1.4}
+  .fvisto{border:1px solid #000;padding:2px 4px;margin-top:3px;clear:both}
+  .fvlbl{font-size:6px;font-weight:700;margin-bottom:6px}.fofic{font-size:6px;font-weight:700;text-align:center;border-top:1px solid #000;padding-top:2px}
+  .ftit{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:700;line-height:1.5;padding:5px;color:#1a3a6b}
+  .fnum{width:115px;border-left:2px solid #000;display:flex}
+  .fnb{flex:1;padding:3px;border-right:1px solid #000;text-align:center}.fnb:last-child{border-right:none}
+  .fnlbl{font-size:6px;font-weight:700;color:#555}.fnval{font-size:14px;font-weight:700;color:#1a3a6b;margin-top:3px}
+  .sec{display:flex;border-bottom:1px solid #000}.sec:last-child{border-bottom:none}
+  .slbl{writing-mode:vertical-rl;transform:rotate(180deg);font-size:7px;font-weight:700;letter-spacing:2px;background:#e8edf5;border-right:1px solid #000;padding:3px;display:flex;align-items:center;justify-content:center;min-width:19px;color:#1a3a6b}
+  .sbody{flex:1;padding:3px}
+  .row{display:flex;border-bottom:.5px solid #ccc}.row:last-child{border-bottom:none}
+  .cell{padding:2px 4px;border-right:.5px solid #ccc;flex:1}.cell:last-child{border-right:none}
+  .clbl{font-size:6px;font-weight:700;color:#555;text-transform:uppercase}
+  .cval{font-size:10px;font-weight:700;min-height:11px;margin-top:1px;color:#1a3a6b}
+  .ass{font-size:6px;text-align:center;border-top:1px solid #000;margin-top:5px;padding-top:2px}
+  .regrw{display:flex;border-top:2px solid #000;min-height:40px;background:#f0f4fa}
+  .reglbl{writing-mode:vertical-rl;transform:rotate(180deg);font-size:7px;font-weight:700;background:#1a3a6b;border-right:2px solid #000;padding:3px;display:flex;align-items:center;justify-content:center;min-width:19px;color:#fff;letter-spacing:2px}
+  .regc{flex:1;padding:4px 6px;border-right:.5px solid #ccc;display:flex;flex-direction:column;justify-content:center}
+  .cxinha{display:inline-block;border:1.5px solid #1a3a6b;padding:2px 7px;border-radius:3px;text-align:center}
+  .kmbox{border:2.5px solid #1a3a6b;padding:3px 10px;border-radius:4px;text-align:center;display:inline-block}
+  .verso{padding:6mm;position:relative;z-index:1}
+  .vh{text-align:center;border:2px solid #1a3a6b;padding:6px;margin-bottom:7px;background:#1a3a6b;color:#fff;border-radius:4px}
+  .vht{font-size:11px;font-weight:700}.vhs{font-size:9px;color:#c8d8f0;margin-top:2px}
+  .vsec{border:1px solid #1a3a6b;margin-bottom:7px;border-radius:3px;overflow:hidden}
+  .vsect{background:#1a3a6b;color:#fff;font-size:8px;font-weight:700;text-transform:uppercase;padding:4px 7px}
+  .vcont{padding:6px 8px;font-size:10px;line-height:1.6;min-height:35px}
+  .fgrid{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px}
+  .fprint{max-width:105px;max-height:85px;object-fit:cover;border:1px solid #ccc}
+  .arow{display:flex;border-bottom:.5px solid #1a3a6b}.arow:last-child{border-bottom:none}
+  .acell{flex:1;padding:5px 7px;border-right:.5px solid #1a3a6b;min-height:42px}.acell:last-child{border-right:none}
+  .albl{font-size:7px;font-weight:700;color:#1a3a6b;text-transform:uppercase;margin-bottom:3px}
+  .aval{font-size:10px;font-weight:700}
+  .cktbl{border-collapse:collapse;width:100%;font-size:9px}
+  .cktbl td{border:.5px solid #ddd;padding:2px 4px}
+  .cktbl th{background:#1a3a6b;color:#fff;padding:3px 5px;font-size:8px;text-align:left}
+  .rodape-p{font-size:7px;color:#888;text-align:center;margin-top:7px;border-top:.5px solid #ddd;padding-top:4px}
+  @media screen{body{background:#555;padding:14px}.pg{background:#fff;padding:12px;margin-bottom:18px;max-width:780px;margin-left:auto;margin-right:auto;box-shadow:0 2px 10px rgba(0,0,0,.3)}.bimpr{display:block;margin:0 auto 14px;padding:9px 22px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}}
+  @media print{.bimpr{display:none}}
+  </style></head><body>
+  <button class="bimpr" onclick="window.print()">🖨️ Imprimir / PDF</button>
+  <div class="pg"><div class="ficha">
+    <div class="fh">
+      <div class="fhpm"><div class="bsm"></div><div class="flogo">Governo do Estado do RJ<br>Sec. de Estado de Polícia Militar<br><strong>13ª UPP / 16º BPM</strong></div><div class="fvisto"><div class="fvlbl">VISTO</div><div class="fofic">OFICIAL DE DIA</div></div></div>
+      <div class="ftit">FICHA DE CIRCULAÇÃO DE VIATURA<br>EXECUTAR MANUTENÇÃO DE 1º ESCALÃO<br>(VERIFICAR ÁGUA E ÓLEO DA VTR.)</div>
+      <div class="fnum"><div class="fnb"><div class="fnlbl">Nº</div><div class="fnval">${f.num}</div></div><div class="fnb"><div class="fnlbl">OPM</div></div></div>
+    </div>
+    <div class="sec"><div class="slbl">SERVIÇO</div><div class="sbody">
+      <div class="row" style="background:#f0f4fa">
+        <div class="cell" style="flex:.5"><div class="clbl">Nº Ord</div></div>
+        <div class="cell" style="flex:2"><div class="clbl">Nome de Escala</div></div>
+        <div class="cell"><div class="clbl">Grad</div></div><div class="cell"><div class="clbl">RG</div></div>
+        <div class="cell"><div class="clbl">Data</div></div><div class="cell"><div class="clbl">Hora</div></div><div class="cell"><div class="clbl">KM</div></div>
+      </div>
+      <div class="row">
+        <div class="cell" style="flex:.5"><div class="cval">${f.num}</div></div>
+        <div class="cell" style="flex:2"><div class="cval">${f.nome}</div></div>
+        <div class="cell"><div class="cval">${f.grad}</div></div><div class="cell"><div class="cval">${f.rg}</div></div>
+        <div class="cell"><div class="cval">${dt}</div></div><div class="cell"><div class="cval">${f.hora}</div></div><div class="cell"><div class="cval">${f.kmInicio}</div></div>
+      </div>
+      <div class="row">
+        <div class="cell" style="flex:1.2"><div class="clbl">Prefixo</div><div class="cval">${f.prefixo}</div></div>
+        <div class="cell" style="flex:1.2"><div class="clbl">Placa</div><div class="cval">${f.placa||""}</div></div>
+        <div class="cell" style="flex:1.2"><div class="clbl">Modelo</div><div class="cval">${f.modelo||""}</div></div>
+        <div class="cell" style="flex:1.4"><div class="clbl">Tipo de Serviço</div><div class="cval">${f.setor||""}</div></div>
+      </div>
+      <div class="row"><div class="cell" style="flex:3"><div class="clbl">Missão/Local</div><div class="cval"></div></div><div class="cell" style="flex:2;padding:4px 5px"><div class="ass">${f.confirmado?f.gradDesp+" "+f.nomeDesp+" / RG "+f.rgDesp:""}<br>Ass. despachante</div></div></div>
+    </div></div>
+    <div class="sec"><div class="slbl">MOTORISTA</div><div class="sbody" style="display:flex">
+      <div style="flex:1;border-right:.5px solid #ccc">
+        <div class="row"><div class="cell"><div class="clbl">Hora</div><div class="cval">${f.hora}</div></div><div class="cell" style="flex:2"><div class="clbl">Local (Liberação)</div><div class="cval">${f.localLib||""}</div></div></div>
+        <div class="row"><div class="cell"><div class="clbl">Data</div><div class="cval">${dt}</div></div></div>
+        <div class="row"><div class="cell"><div class="clbl">KM</div><div class="cval">${f.kmInicio}</div></div></div>
+      </div>
+      <div style="flex:1.2;padding:5px;display:flex;align-items:flex-end"><div style="width:100%"><div class="ass">${f.nome} / RG ${f.rg}<br>Ass. motorista</div></div></div>
+    </div></div>
+    <div class="sec"><div class="slbl">MOTORISTA</div><div class="sbody">
+      <div style="display:flex;gap:14px;margin-bottom:2px"><div style="flex:1">1. Abastecimento-local: _______________</div><div style="flex:1">4. Km atual: <strong>${f.kmInicio}</strong></div></div>
+      <div style="display:flex;gap:14px;margin-bottom:2px"><div style="flex:1">2. Combustível: _______________</div><div style="flex:1">5. Data: <strong>${dt}</strong></div></div>
+      <div style="display:flex;gap:14px;align-items:center"><div style="flex:1">3. Qtd-litros: _______________</div><div style="flex:1">6. Hora: <strong>${f.hora}</strong></div><div style="flex:1"><div class="ass">${f.nome}<br>Ass. motorista</div></div></div>
+    </div></div>
+    <div class="regrw">
+      <div class="reglbl">REG.</div>
+      <div class="regc"><div class="cxinha"><div class="clbl">DATA</div><div style="font-size:10px;font-weight:700;color:#1a3a6b;margin-top:2px">${dt}</div></div></div>
+      <div class="regc"><div class="cxinha"><div class="clbl">HORA</div><div style="font-size:10px;font-weight:700;color:#1a3a6b;margin-top:2px">${f.hora}</div></div></div>
+      <div class="regc"><div class="kmbox"><div style="font-size:7px;font-weight:700">KM FINAL</div><div style="font-size:14px;font-weight:700;color:#1a3a6b;margin-top:2px">${f.kmFinal||"__________"}</div></div></div>
+      <div class="regc"><div class="ass">${f.confirmado?f.gradDesp+" "+f.nomeDesp+" / RG "+f.rgDesp+" / ID "+f.idDesp:""}<br>Ass. despachante</div></div>
+    </div>
+  </div></div>
+  <div class="pg"><div class="verso">
+    <div class="vh"><div class="vht">PMERJ — FICHA Nº ${f.num} — VERSO · CHECKLIST E ALTERAÇÕES</div>
+    <div class="vhs">${f.grad} ${f.nome} · RG ${f.rg} · ${dt} · ${f.prefixo} — ${f.modelo||""} · ${f.setor||""}</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:7px">
+      <div class="vsec" style="flex:1"><div class="vsect">✅ Checklist</div><table class="cktbl"><thead><tr><th>Item</th><th>Estado</th></tr></thead><tbody>${ckR}</tbody></table></div>
+      <div class="vsec" style="flex:2"><div class="vsect">🔍 Conf. Obrigatória: Água · Óleo · Limpeza</div><div class="vcont" style="color:#555">Motorista declarou ter verificado os níveis de água, óleo e limpeza antes de assumir o serviço.</div></div>
+    </div>
+    <div class="vsec"><div class="vsect">⚠️ Alterações Declaradas</div><div class="vcont">${f.alteracoes?f.alteracoes.replace(/\n/g,"<br>"):"<em style='color:#aaa'>Nenhuma alteração registrada. Motorista declara que recebeu a viatura sem irregularidades e assume responsabilidade.</em>"}</div></div>
+    ${f.fotos&&f.fotos.length?`<div class="vsec"><div class="vsect">📷 Fotos</div><div class="fgrid">${f.fotos.map((s,i)=>`<div><img src="${s}" class="fprint"><p style="font-size:7px;text-align:center;color:#666;margin-top:2px">Foto ${i+1}</p></div>`).join("")}</div></div>`:""}
+    <div class="vsec"><div class="vsect">✅ Confirmação do Despachante</div>
+      <div class="arow"><div class="acell"><div class="albl">Despachante</div><div class="aval">${f.gradDesp||""} ${f.nomeDesp||""}</div></div><div class="acell"><div class="albl">RG</div><div class="aval">${f.rgDesp||""}</div></div><div class="acell"><div class="albl">ID</div><div class="aval">${f.idDesp||""}</div></div></div>
+      <div class="arow"><div class="acell" style="flex:2"><div class="albl">Local de liberação</div><div class="aval">${f.localLib||""}</div></div><div class="acell"><div class="albl">Situação</div><div class="aval" style="color:${f.confirmado?"#155724":"#856404"}">${f.confirmado?"✓ Confirmado":"⏳ Pendente"}</div></div></div>
+      ${f.justificativaSetor?`<div class="arow"><div class="acell fcol"><div class="albl">Justificativa setor divergente</div><div class="aval">${f.justificativaSetor}</div></div></div>`:""}
+      <div class="arow"><div class="acell" style="min-height:48px"><div class="albl">Ass. Motorista</div></div><div class="acell" style="min-height:48px"><div class="albl">Ass. Despachante</div></div><div class="acell" style="min-height:48px"><div class="albl">Visto Oficial</div></div></div>
+    </div>
+    <div class="rodape-p">PMERJ · 13ª UPP / 16º BPM · Ficha nº ${f.num} · ${new Date().toLocaleString("pt-BR")}</div>
+  </div></div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+</script>
+</body>
+</html>
