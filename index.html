@@ -38,7 +38,7 @@ body::before{content:"";position:fixed;inset:0;background-image:url("https://upl
 .bsair{background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:6px 11px;font-size:12px;cursor:pointer;color:#fff;font-family:inherit;}
 
 /* NAV */
-.nav{display:flex;gap:4px;margin-bottom:10px;background:var(--azd);border-radius:9px;padding:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.nav{display:flex;gap:4px;margin-bottom:10px;background:var(--azd);border-radius:9px;padding:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;position:sticky;top:6px;z-index:6;box-shadow:0 3px 10px rgba(14,35,71,.25);}
 .nav button{flex:1;min-width:70px;padding:9px 4px;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:transparent;cursor:pointer;font-size:11px;font-weight:600;color:rgba(255,255,255,.7);white-space:nowrap;font-family:inherit;}
 .nav button.active{background:var(--dou);color:#0e2347;border-color:var(--dou)}
 
@@ -260,7 +260,7 @@ body::before{content:"";position:fixed;inset:0;background-image:url("https://upl
     <div class="stitle">🚔 Dados da Viatura</div>
     <div class="fg">
       <div class="f"><label>Prefixo *</label><input type="text" id="f-pref" placeholder="Ex: 52-3097" autocomplete="off" oninput="buscaVtr();chkF()" autocomplete="off" style="text-transform:uppercase"></div>
-      <div class="f"><label>Tipo de Serviço *</label><select id="f-setor" onchange="chkF()">
+      <div class="f"><label>Tipo de Serviço *</label><select id="f-setor" onchange="atualizaHorario();chkF()">
         <option value="">Selecione</option>
         <option>GTPP OPERAÇÕES I</option><option>GTPP OPERAÇÕES II</option>
         <option>GTPP I</option><option>GTPP II</option><option>GTPP III</option><option>GTPP IV</option>
@@ -277,7 +277,25 @@ body::before{content:"";position:fixed;inset:0;background-image:url("https://upl
     <div id="aviso-dup-mot" class="al al-w" style="display:none"></div>
   </div>
 
-  <div class="card">
+  
+    <!-- HORÁRIO DE SERVIÇO -->
+    <div class="f" id="f-horario-wrap" style="display:none;margin-top:10px">
+      <label>Horário de Serviço *</label>
+      <select id="f-horario" onchange="chkF()" style="font-weight:700;color:#1a3a6b;border:1.5px solid #ccc;border-radius:8px;padding:10px 12px;font-size:14px;width:100%;font-family:inherit">
+        <option value="">Selecione o horário</option>
+      </select>
+    </div>
+  </div><!-- fim card dados VTR -->
+
+  <!-- GUARNIÇÃO -->
+  <div class="card" style="margin-bottom:10px">
+    <div class="stitle">👥 Guarnição</div>
+    <p style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.5">Informe o RG dos militares da guarnição (além do motorista).</p>
+    <div id="guarnicao-list"></div>
+    <button type="button" onclick="addGuarnicaoItem()" class="btns" style="margin-top:8px;font-size:12px">➕ Adicionar membro</button>
+  </div>
+
+  <div class="card" style="margin-bottom:10px"><!-- início card KM>
     <div class="stitle">🕐 Dados do Serviço</div>
     <div class="fg">
       <div class="f"><label>Data *</label><input type="date" id="f-data" oninput="chkF()"></div>
@@ -628,6 +646,14 @@ body::before{content:"";position:fixed;inset:0;background-image:url("https://upl
     <div id="cfg-ok" class="al al-s" style="display:none;margin-top:9px">✅ Salvo!</div>
   </div>
   <div class="card">
+    <div class="stitle">⏰ Horários de Serviço por Setor</div>
+    <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.5">Configure os turnos disponíveis para cada tipo de serviço. Use vírgula para separar múltiplos horários.</p>
+    <div id="cfg-horarios-list"></div>
+    <button class="btnp" style="width:auto;padding:9px 16px;margin-top:4px" onclick="salvarHorarios()">💾 Salvar Horários</button>
+    <div id="hor-ok" class="al al-s" style="display:none;margin-top:9px">✅ Horários salvos!</div>
+  </div>
+
+  <div class="card">
     <div class="stitle">🔢 Numeração das Fichas</div>
     <p style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.5">Defina o número inicial das próximas fichas. A partir daí o sistema continua sequencialmente.</p>
     <div class="fg" style="margin-bottom:12px">
@@ -647,6 +673,7 @@ body::before{content:"";position:fixed;inset:0;background-image:url("https://upl
     <button class="btns" onclick="testarConn()" style="margin-top:8px">🔌 Testar Conexão</button>
     <button class="btnp" onclick="sincronizarTudo()" style="margin-top:8px">☁️ Sincronizar Tudo com Google Sheets</button>
     <div id="sinc-ok" class="al al-s" style="display:none;margin-top:9px">✅ Dados sincronizados com sucesso!</div>
+    <div id="sync-fila-badge" style="margin-top:8px;font-size:12px;font-weight:700;color:#856404;text-align:center"></div>
   </div>
 </div>
 
@@ -944,14 +971,130 @@ const CK=[
   {key:"macaco",label:"Macaco"},{key:"triangulo",label:"Triângulo"},
   {key:"chaveRoda",label:"Chave de Roda"}
 ];
+// Mapa único key->label (evita repetir a mesma tabela em 3 lugares).
+const CK_LABELS=Object.fromEntries(CK.map(it=>[it.key,it.label]));
 
 // ===== STATE =====
 let SCRIPT_URL=ls("pm_url")||"";
 let ADMIN_PASS=ls("pm_apass")||"admin2024";
 let LOCAL_PAD=ls("pm_local")||"Pátio da UPP Complexo da Penha";
 let ordemOfs=parseInt(ls("pm_ofs")||"0");
-function ls(k){return localStorage.getItem(k);}
-function lss(k,v){localStorage.setItem(k,v);}
+let HORARIOS=JSON.parse(ls("pm_horarios")||"null")||{
+  "SUPERVISÃO DE GRADUADO":   [{t:"05:00 às 05:00 (24h)"}],
+  "GTPP OPERAÇÕES I":  [{t:"05:00 às 05:00 (24h)"}],
+  "GTPP OPERAÇÕES II": [{t:"05:00 às 05:00 (24h)"}],
+  "GTPP I":  [{t:"05:00 às 05:00 (24h)"}],
+  "GTPP II": [{t:"05:00 às 05:00 (24h)"}],
+  "GTPP III":[{t:"05:00 às 05:00 (24h)"}],
+  "GTPP IV": [{t:"05:00 às 05:00 (24h)"}],
+  "GPP I":   [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP II":  [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP III": [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP IV":  [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP V":   [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP VI":  [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP VII": [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP VIII":[{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP IX":  [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP X":   [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "GPP XI":  [{t:"05:00 às 17:00"},{t:"17:00 às 05:00"},{t:"06:00 às 18:00"},{t:"18:00 às 06:00"}],
+  "RAS I":   [{t:"06:00 às 14:00"},{t:"19:00 às 03:00"}],
+  "RAS II":  [{t:"06:00 às 14:00"},{t:"19:00 às 03:00"}],
+  "RAS III": [{t:"06:00 às 14:00"},{t:"19:00 às 03:00"}],
+  "RAS IV":  [{t:"06:00 às 14:00"},{t:"19:00 às 03:00"}],
+  "RAS V":   [{t:"06:00 às 14:00"},{t:"19:00 às 03:00"}],
+  "RAS VI":  [{t:"06:00 às 14:00"},{t:"19:00 às 03:00"}],
+  "MOTO PATRULHA":     [{t:"05:00 às 05:00 (24h)"}],
+  "ADMINISTRATIVO":    [{t:"08:00 às 17:00"}],
+  "VAN DE TRANSPORTE": [{t:"05:00 às 05:00 (24h)"}],
+  "OUTRO":             [{t:"A definir"}]
+};
+function getHorario(setor){return HORARIOS[setor]||[{t:"A definir"}];}
+function ls(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lss(k,v){
+  try{localStorage.setItem(k,v);return true;}
+  catch(e){
+    // Quota estourada: tenta liberar espaço removendo fotos de fichas antigas e repete uma vez
+    try{ liberarEspacoFotos(); localStorage.setItem(k,v); return true; }
+    catch(e2){
+      console.warn("⚠️ localStorage cheio:",e2.message);
+      if(typeof avisarArmazenamentoCheio==="function") avisarArmazenamentoCheio();
+      return false;
+    }
+  }
+}
+// Remove as fotos (base64) das fichas que NÃO são de hoje para liberar espaço.
+// As fotos antigas raramente são reabertas; o dado essencial da ficha é preservado.
+function liberarEspacoFotos(){
+  try{
+    if(typeof fichas==="undefined"||!Array.isArray(fichas)) return;
+    const h=hoje();
+    let mudou=false;
+    fichas.forEach(f=>{ if(f.data!==h && f.fotos && f.fotos.length){ f.fotos=[]; f.fotosRemovidas=true; mudou=true; } });
+    if(mudou) localStorage.setItem("pm_fichas",JSON.stringify(fichas));
+  }catch(_){}
+}
+let _avisouCheio=false;
+function avisarArmazenamentoCheio(){
+  if(_avisouCheio) return; _avisouCheio=true;
+  try{ alert("⚠️ Armazenamento local do navegador está cheio.\n\nAs fotos antigas foram removidas automaticamente para liberar espaço. Os dados das fichas foram preservados. Sincronize com o Google Sheets para não perder informações."); }catch(_){}
+}
+
+// ===== FOTOS: ARMAZENAMENTO DURÁVEL (IndexedDB) =====
+// O localStorage (~5 MB) não comporta fotos por 1 ano. O IndexedDB tem cota muito
+// maior (centenas de MB) e persiste no aparelho. As fichas guardam só metadados;
+// as fotos (já comprimidas) ficam no IndexedDB, indexadas pelo nº da ficha.
+const FOTO_DB="pmerj_fotos", FOTO_STORE="fotos";
+let _fotoDB=null;
+function abrirFotoDB(){
+  return new Promise((res,rej)=>{
+    if(_fotoDB) return res(_fotoDB);
+    if(!("indexedDB" in window)) return rej(new Error("IndexedDB indisponível"));
+    const req=indexedDB.open(FOTO_DB,1);
+    req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(FOTO_STORE))db.createObjectStore(FOTO_STORE);};
+    req.onsuccess=e=>{_fotoDB=e.target.result;res(_fotoDB);};
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+async function salvarFotosIDB(num,arr){
+  try{
+    const db=await abrirFotoDB();
+    await new Promise((res,rej)=>{const tx=db.transaction(FOTO_STORE,"readwrite");tx.objectStore(FOTO_STORE).put(arr||[],String(num));tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);});
+  }catch(e){console.warn("IDB salvar foto falhou:",e.message);}
+}
+async function lerFotosIDB(num){
+  try{
+    const db=await abrirFotoDB();
+    return await new Promise(res=>{const tx=db.transaction(FOTO_STORE,"readonly");const rq=tx.objectStore(FOTO_STORE).get(String(num));rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>res([]);});
+  }catch(e){return [];}
+}
+// Recarrega as fotos das fichas em memória a partir do IndexedDB (na inicialização).
+async function hidratarFotosDoIDB(){
+  try{
+    for(const f of fichas){
+      if(!f.fotos||!f.fotos.length){const arr=await lerFotosIDB(f.num);if(arr&&arr.length)f.fotos=arr;}
+    }
+  }catch(_){}
+}
+// Pede ao navegador armazenamento persistente (reduz o risco de limpeza automática).
+try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(_){}
+
+// ===== SETOR: FONTE ÚNICA DA VERDADE =====
+// O setor de cada VTR vivia em dois lugares (vtr.emprego e distrib[].s) e divergia.
+// Agora a "distrib" é a fonte única; o campo "emprego" é DERIVADO dela, sempre no
+// vocabulário canônico usado pelo formulário e pelos horários.
+const SETOR_CANON={
+  "SUPERVISÃO":"SUPERVISÃO DE GRADUADO","ADM":"ADMINISTRATIVO","VAN TRANSPORTE":"VAN DE TRANSPORTE",
+  "GTPP OPER. I":"GTPP OPERAÇÕES I","GTPP OPER. II":"GTPP OPERAÇÕES II","CMD":""
+};
+function setorCanonico(s){ if(s in SETOR_CANON) return SETOR_CANON[s]; return s||""; }
+function sincronizarEmpregoComDistrib(){
+  if(typeof vtrs==="undefined"||typeof distrib==="undefined") return;
+  const mapa={};
+  distrib.forEach(d=>{ if(d.t) mapa[d.t.toUpperCase()]=setorCanonico(d.s); });
+  vtrs.forEach(v=>{ v.emprego = mapa[v.prefixo.toUpperCase()] || ""; });
+}
+
 const DADOS_VERSAO="v2025-06-04";
 function loadVtrs(){
   // Se versão mudou, força reset das viaturas e distribuição
@@ -1000,7 +1143,7 @@ let distrib = JSON.parse(ls("pm_distrib") || "null") || [
   {g:"GPP",s:"GPP X",t:"54-9879",r:""},
   {g:"GPP",s:"GPP XI",t:"54-9429",r:"54-8872"},
   {g:"RAS",s:"RAS I",t:"54-0212",r:""},
-  {g:"RAS",s:"RAS II",t:"54-9885",r:""},
+  {g:"RAS",s:"RAS II",t:"54-9985",r:""},
   {g:"RAS",s:"RAS III",t:"54-8867",r:""},
   {g:"RAS",s:"RAS IV",t:"52-3950",r:""},
   {g:"RAS",s:"RAS V",t:"54-0305",r:""},
@@ -1012,6 +1155,8 @@ let distrib = JSON.parse(ls("pm_distrib") || "null") || [
   {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2368",r:""},
   {g:"MOTO PATRULHA",s:"MOTO PATRULHA",t:"40-2369",r:""}
 ];
+// distrib é a fonte única do setor: deriva o "emprego" de cada VTR a partir dela.
+sincronizarEmpregoComDistrib();
 
 function renderQuadroDespachante(){if(typeof renderDespViaturasUnificado==="function"){renderDespViaturasUnificado();return;}const h=hoje();
   const ficHoje=fichas.filter(f=>f.data===h&&!f.kmFinal);
@@ -1197,7 +1342,10 @@ function pararAutoRefreshQuadro(){
 }
 
 function salva(){
-  lss("pm_fichas",JSON.stringify(fichas));
+  // Fotos NÃO vão para o localStorage (ficam no IndexedDB, duráveis). Aqui guardamos
+  // só os metadados das fichas — mantém o localStorage leve e sem risco de estourar.
+  const fichasLeves=fichas.map(f=>(f.fotos&&f.fotos.length)?{...f,fotos:[]}:f);
+  lss("pm_fichas",JSON.stringify(fichasLeves));
   lss("pm_vtrs",JSON.stringify(vtrs));
   lss("pm_desps",JSON.stringify(desps));
   lss("pm_manut",JSON.stringify(manutencoes));
@@ -1206,16 +1354,63 @@ function salva(){
   lss("pm_distrib",JSON.stringify(distrib));
 }
 
-// ===== SYNC COM GOOGLE SHEETS =====
+// ===== SYNC COM GOOGLE SHEETS (com fila offline) =====
+function enfileirarSync(payload){
+  try{
+    const fila=JSON.parse(ls("pm_sync_fila")||"[]");
+    fila.push({payload,ts:Date.now()});
+    // mantém no máx. 200 itens pendentes para não estourar a memória
+    lss("pm_sync_fila",JSON.stringify(fila.slice(-200)));
+    atualizarBadgeFila();
+  }catch(e){console.warn("Falha ao enfileirar sync:",e.message);}
+}
+async function flushSyncQueue(){
+  if(!SCRIPT_URL) return;
+  let fila;
+  try{ fila=JSON.parse(ls("pm_sync_fila")||"[]"); }catch(_){ fila=[]; }
+  if(!fila.length){ atualizarBadgeFila(); return; }
+  const total=fila.length, restantes=[]; let enviados=0;
+  for(const item of fila){
+    atualizarBadgeFila("📤 Enviando "+(enviados+1)+" de "+total+"…");
+    try{
+      await fetch(SCRIPT_URL,{method:"POST",body:item.payload,headers:{"Content-Type":"text/plain"}});
+      enviados++;
+    }catch(e){ restantes.push(item); } // ainda sem rede: mantém na fila
+  }
+  lss("pm_sync_fila",JSON.stringify(restantes));
+  if(restantes.length===0 && enviados>0){ atualizarBadgeFila("✅ "+enviados+" envio(s) concluído(s)"); setTimeout(atualizarBadgeFila,2500); }
+  else atualizarBadgeFila();
+}
+function contarFila(){
+  let fila=[]; try{ fila=JSON.parse(ls("pm_sync_fila")||"[]"); }catch(_){}
+  let fotos=0; fila.forEach(it=>{ try{ if(JSON.parse(it.payload).action==="salvarFotos") fotos++; }catch(_){} });
+  return {total:fila.length, fotos};
+}
+// Atualiza o selo de pendências (na tela de Config) e o indicador flutuante (todas as telas).
+// Se 'estado' for passado, mostra essa mensagem transitória no flutuante.
+function atualizarBadgeFila(estado){
+  const {total,fotos}=contarFila();
+  const el=document.getElementById("sync-fila-badge");
+  if(el) el.textContent = total ? ("⏳ "+total+" registro(s) aguardando envio"+(fotos?" ("+fotos+" com foto)":"")) : "";
+  const fl=document.getElementById("sync-float");
+  if(fl){
+    const txt = estado || (total ? ("⏳ "+total+" pendente(s)"+(fotos?" · "+fotos+" 📷":"")) : "");
+    if(txt){ fl.style.display="flex"; fl.textContent=txt; } else { fl.style.display="none"; }
+  }
+}
 async function syncPost(action, data){
   if(!SCRIPT_URL) return;
+  const payload=JSON.stringify({action,...data});
   try{
     await fetch(SCRIPT_URL,{
       method:"POST",
-      body:JSON.stringify({action,...data}),
+      body:payload,
       headers:{"Content-Type":"text/plain"}
     });
-  }catch(e){console.warn("Sync falhou:",e.message);}
+  }catch(e){
+    console.warn("Sync falhou, guardando para reenvio:",e.message);
+    enfileirarSync(payload);
+  }
 }
 
 async function syncViaturas(){await syncPost("salvarViaturas",{viaturas:vtrs});}
@@ -1228,9 +1423,43 @@ async function syncBaixaVtr(prefixo,registro){await syncPost("baixarVtr",{prefix
 async function syncFicha(ficha){await syncPost("novaFicha",{ficha});}
 async function syncConfirmarFicha(ficha){await syncPost("confirmarFicha",{ficha});}
 
+// Envia as fotos (base64 comprimido) para o Google Drive via Apps Script.
+// Usa a fila offline se a rede estiver indisponível.
+async function syncFotos(num, fotos){
+  if(!SCRIPT_URL || !fotos || !fotos.length) return;
+  // só envia fotos em base64 (as que já são link do Drive não precisam reenvio)
+  const novas=fotos.filter(s=>typeof s==="string" && s.startsWith("data:"));
+  if(!novas.length) return;
+  const payload=JSON.stringify({action:"salvarFotos",num,fotos:novas});
+  try{
+    await fetch(SCRIPT_URL,{method:"POST",body:payload,headers:{"Content-Type":"text/plain"}});
+  }catch(e){
+    console.warn("Falha ao enviar fotos, enfileirando:",e.message);
+    enfileirarSync(payload);
+  }
+}
+// Carrega as fotos de uma ficha: 1º tenta o IndexedDB local; se vazio, busca no Drive.
+async function carregarFotosFicha(num){
+  let arr=await lerFotosIDB(num);
+  if(arr&&arr.length) return arr;
+  if(SCRIPT_URL){
+    try{
+      const r=await fetch(SCRIPT_URL+"?action=getFotos&num="+encodeURIComponent(num));
+      const d=await r.json();
+      if(d.fotos&&d.fotos.length){
+        const urls=d.fotos.map(x=>x.b64||x.URL||("https://drive.google.com/thumbnail?id="+x.FileId+"&sz=w1200"));
+        salvarFotosIDB(num,urls); // cacheia localmente para a próxima vez
+        return urls;
+      }
+    }catch(_){}
+  }
+  return [];
+}
+
 // Carrega dados do Sheets na inicialização
 async function carregarDoSheets(){
   if(!SCRIPT_URL) return;
+  flushSyncQueue(); // reenvia o que ficou pendente offline
   try{
     const r=await fetch(SCRIPT_URL+"?action=getTodos");
     const d=await r.json();
@@ -1239,6 +1468,8 @@ async function carregarDoSheets(){
         num:String(f.Num),timestamp:f.Timestamp,nome:f.Nome,grad:f.Grad,rg:String(f.RG),tel:f.Tel||"",
         data:f.Data,hora:f.Hora,kmInicio:parseInt(f.KM_Inicio)||0,kmFinal:f.KM_Final||null,
         prefixo:String(f.Prefixo),placa:f.Placa||"",modelo:f.Modelo||"",setor:f.Setor||"",
+        guarnicao:f.Guarnicao?String(f.Guarnicao).split(",").map(s=>s.trim()).filter(Boolean):[],
+        horarioServico:f.Horario_Servico||"",
         alteracoes:f.Alteracoes||"",checklist:JSON.parse(f.Checklist||"{}"),
         confirmado:f.Confirmado==="Sim",nomeDesp:f.Nome_Desp||"",gradDesp:f.Grad_Desp||"",
         rgDesp:String(f.RG_Desp||""),idDesp:String(f.ID_Desp||""),localLib:f.Local_Lib||"",
@@ -1274,8 +1505,11 @@ async function carregarDoSheets(){
       lss("pm_notif",JSON.stringify(notificacoes));
     }
     console.log("✅ Dados carregados do Google Sheets");
+    sincronizarEmpregoComDistrib(); // mantém o setor consistente após o load
+    await hidratarFotosDoIDB();      // recarrega as fotos guardadas no aparelho
   }catch(e){
     console.warn("Sheets indisponível, usando dados locais:",e.message);
+    await hidratarFotosDoIDB();
   }
 }
 function hoje(){return new Date().toISOString().split("T")[0];}
@@ -1310,6 +1544,7 @@ function showApp(r){
     carregarDoSheets(); // carrega dados atualizados silenciosamente
   }
   else if(r==="despachante"){document.getElementById("page-d-painel").classList.add("active");setTurnoInfo();renderPainel("todos");preencherSOP();
+    hidratarFotosDoIDB();
     setTimeout(verificarNotificacoes,800);}
   else{
     document.getElementById("page-a-viaturas").classList.add("active");loadCfg();
@@ -1334,7 +1569,6 @@ function sp(id,el,navId){
   if(id==="d-viaturas"){renderDespViaturasUnificado();iniciarAutoRefreshQuadro();}
   else if(id!=="d-painel")pararAutoRefreshQuadro();
   if(id==="d-pendentes")renderPendentes();
-  if(id==="d-viaturas")renderDespViaturasUnificado();
   if(id==="d-assuncao")preencherSOP();
   if(id==="a-fichas"){document.getElementById("fil-data").value=hoje();renderAdmFichas();}
   if(id==="a-manut"){renderAdmManut();}
@@ -1447,9 +1681,52 @@ function chkDupMot(){
   const outra=fichas.find(f=>f.data===hoje()&&String(f.rg)===String(rg)&&f.prefixo.toUpperCase()!==pNorm&&!f.kmFinal);
   if(outra) av.innerHTML="⚠️ Você já tem ficha aberta na viatura <strong>"+outra.prefixo+"</strong> ("+outra.modelo+") — Setor: "+outra.setor+". Confirme se deseja continuar com outra viatura.",av.style.display="block";
 }
+function atualizaHorario(){
+  const setor=document.getElementById("f-setor")?.value||"";
+  const wrap=document.getElementById("f-horario-wrap");
+  const sel=document.getElementById("f-horario");
+  if(!wrap||!sel)return;
+  const turnos=getHorario(setor);
+  if(!setor||!turnos.length){
+    wrap.style.display="none";sel.innerHTML="<option value=''>Selecione o horário</option>";return;
+  }
+  sel.innerHTML="<option value=''>Selecione o horário</option>"+
+    turnos.map(h=>`<option value="${h.t}">${h.t}</option>`).join("");
+  // Auto-selecionar se só tem 1 opção
+  if(turnos.length===1){sel.value=turnos[0].t;}
+  wrap.style.display="block";
+  chkF();
+}
+
+function addGuarnicaoItem(){
+  const list=document.getElementById("guarnicao-list");
+  if(!list)return;
+  const idx=list.children.length;
+  const div=document.createElement("div");
+  div.style.cssText="display:flex;gap:8px;align-items:center;margin-bottom:8px";
+  div.innerHTML=`<input type="text" inputmode="numeric" placeholder="RG do militar" maxlength="10"
+    style="flex:1;border:1.5px solid #ccc;border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit"
+    oninput="this.value=this.value.replace(/\D/g,'')">
+    <button type="button" onclick="this.parentElement.remove()" style="background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:6px;padding:8px 12px;font-size:14px;cursor:pointer">🗑</button>`;
+  list.appendChild(div);
+}
+
+function getGuarnicao(){
+  const list=document.getElementById("guarnicao-list");
+  if(!list)return[];
+  return Array.from(list.querySelectorAll("input")).map(i=>i.value.trim()).filter(v=>v);
+}
+
+function limpaGuarnicao(){
+  const list=document.getElementById("guarnicao-list");
+  if(list)list.innerHTML="";
+}
+
 function chkF(){
   const kmVal=parseInt(document.getElementById("f-km").value||"0");
-  const camposOk=["f-nome","f-grad","f-rg","f-data","f-hora","f-pref","f-setor"].every(id=>document.getElementById(id).value.trim()!=="")&&kmVal>0;
+  const horWrap=document.getElementById("f-horario-wrap");
+  const horOk=!horWrap||horWrap.style.display==="none"||(document.getElementById("f-horario")?.value||"")!=="";
+  const camposOk=["f-nome","f-grad","f-rg","f-data","f-hora","f-pref","f-setor"].every(id=>document.getElementById(id).value.trim()!=="")&&kmVal>0&&horOk;
   // Checklist obrigatório — todos os 7 itens precisam ser preenchidos
   const ckOk=["radio","giroflex","sirene","estepe","macaco","triangulo","chaveRoda"].every(k=>{
     const el=document.getElementById("ck-"+k);
@@ -1467,9 +1744,41 @@ function chkF(){
   if(ckAviso) ckAviso.style.display=ckOk?"none":"block";
   if(document.getElementById("f-rg").value.trim()) chkDupMot();
 }
-function prevFotos(inp){
+// Comprime e redimensiona a imagem ANTES de guardar (economia drástica de memória).
+// Uma foto de celular de ~3 MB cai para ~80-150 KB sem perda relevante de leitura.
+function comprimirImagem(file, maxLado=1000, qualidade=0.55){
+  return new Promise((resolve)=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let {width:w,height:h}=img;
+        if(w>h && w>maxLado){ h=Math.round(h*maxLado/w); w=maxLado; }
+        else if(h>=w && h>maxLado){ w=Math.round(w*maxLado/h); h=maxLado; }
+        const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+        cv.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL("image/jpeg",qualidade));
+      };
+      img.onerror=()=>resolve(e.target.result); // fallback: usa original
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+async function prevFotos(inp){
   const prev=document.getElementById("foto-prev");prev.innerHTML="";fotosB64=[];
-  Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{fotosB64.push(e.target.result);const img=document.createElement("img");img.src=e.target.result;img.className="fthumb";prev.appendChild(img);};r.readAsDataURL(f);});
+  const arquivos=Array.from(inp.files).slice(0,3); // no máximo 3 fotos
+  for(const f of arquivos){
+    const b64=await comprimirImagem(f);
+    fotosB64.push(b64);
+    const img=document.createElement("img");img.src=b64;img.className="fthumb";prev.appendChild(img);
+  }
+  if(inp.files.length>3){
+    const aviso=document.createElement("div");
+    aviso.style.cssText="font-size:11px;color:#a32d2d;width:100%;margin-top:4px";
+    aviso.textContent="Apenas as 3 primeiras fotos foram mantidas (economia de memória).";
+    prev.appendChild(aviso);
+  }
 }
 function getCk(){const res={};CK.forEach(it=>{res[it.key]=document.getElementById("ck-"+it.key).value||"";});return res;}
 
@@ -1502,24 +1811,62 @@ function enviarFicha(){
     grad:document.getElementById("f-grad").value,rg,
     tel:document.getElementById("f-tel").value.trim(),
     data:h,hora:document.getElementById("f-hora").value,
-    kmInicio:ficAberta?km:km,kmFinal:null,
+    kmInicio:km,kmFinal:null,
     prefixo:p,placa:vtr.placa||"",modelo:vtr.modelo||"",
     setorPadrao:vtr.emprego||"",
     setor:document.getElementById("f-setor").value,
+    guarnicao:getGuarnicao(),
+    horarioServico:document.getElementById("f-horario")?.value||"",
     checklist:getCk(),alteracoes:document.getElementById("f-alt").value,
-    fotos:fotosB64.slice(0,6),
+    fotos:fotosB64.slice(0,3),
     confirmado:false,nomeDesp:"",gradDesp:"",rgDesp:"",idDesp:"",localLib:"",justificativaSetor:"",
     vtrJaEmpenhada:ficAberta?true:false,fichaAnteriorNum:ficAberta?ficAberta.num:null
   };
   fichas.push(ficha);salva();
-  syncFicha(ficha); // sync automático
+  salvarFotosIDB(num, ficha.fotos);     // cópia local durável (IndexedDB)
+  // Sincroniza a ficha SEM o base64 (mais leve) e envia as fotos ao Drive à parte.
+  syncFicha({...ficha, fotos:[], fotosQtd:(ficha.fotos||[]).length});
+  syncFotos(num, ficha.fotos);
   document.getElementById("btn-env").disabled=true;
   limpaForm();initForm();buildCk();
-  alert("✅ Ficha nº "+num+" registrada com sucesso!");
+  // Montar mensagem para WhatsApp
+  const ckItems=Object.entries(ficha.checklist||{}).map(([k,v])=>{
+    const labels=CK_LABELS;
+    const status=v==="OK"?"✅":v==="BX"?"❌":"—";
+    return status+" "+labels[k];
+  }).join("\n");
+  const guarnicaoTxt=ficha.guarnicao&&ficha.guarnicao.length
+    ?"\n👥 *Guarnição (RG):* "+ficha.guarnicao.join(", "):"";
+  const horTxt=ficha.horarioServico?"\n⏰ *Horário de Serviço:* "+ficha.horarioServico:"";
+  const msg=
+    "*ASSUNÇÃO DE VIATURA — 13ª UPP / 16º BPM*\n"+
+    "*Complexo da Penha*\n\n"+
+    "📋 *Ficha nº:* #"+num+"\n"+
+    "📅 *Data/Hora:* "+fmtD(ficha.data)+" às "+ficha.hora+"\n\n"+
+    "👤 *Militar:* "+ficha.grad+" "+ficha.nome+"\n"+
+    "🪪 *RG:* "+ficha.rg+
+    (ficha.tel?"\n📱 *Tel:* "+ficha.tel:"")+
+    guarnicaoTxt+"\n\n"+
+    "🚔 *Viatura:* "+ficha.prefixo+" — "+ficha.modelo+
+    (ficha.placa?" ("+ficha.placa+")":"")+"\n"+
+    "🎯 *Tipo de Serviço:* "+ficha.setor+
+    horTxt+"\n"+
+    "🛣️ *KM Inicial:* "+ficha.kmInicio+"\n\n"+
+    "✅ *Checklist:*\n"+ckItems+
+    (ficha.alteracoes?"\n\n⚠️ *Alterações:* "+ficha.alteracoes:"")+
+    "\n\n_Registrado via Sistema de Circulação de Viaturas_\n"+
+    "_https://p4complexopenha-max.github.io/pmerj-viaturas/_";
+  const url="https://wa.me/?text="+encodeURIComponent(msg);
+  if(confirm("✅ Ficha #"+num+" registrada!\n\nDeseja enviar pelo WhatsApp agora?")){
+    window.open(url,"_blank");
+  }
 }
 function limpaForm(){
   ["f-nome","f-rg","f-km","f-pref","f-placa","f-modelo","f-alt","f-tel"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
   document.getElementById("f-km").value="";
+  const hw=document.getElementById("f-horario-wrap");if(hw)hw.style.display="none";
+  const hs=document.getElementById("f-horario");if(hs)hs.innerHTML="<option value=''>Selecione o horário</option>";
+  limpaGuarnicao();
   document.getElementById("f-grad").selectedIndex=0;document.getElementById("f-setor").selectedIndex=0;
   document.getElementById("foto-prev").innerHTML="";
   document.getElementById("vtr-bx-aviso").style.display="none";
@@ -1528,7 +1875,6 @@ function limpaForm(){
 }
 
 // ===== BAIXA MOTORISTA =====
-function buscaVtrBaixa(){}
 function buscarFichaParaBaixa(){
   const rg=document.getElementById("mb-rg").value.trim();
   const enc=document.getElementById("mb-ficha-encontrada");
@@ -2086,7 +2432,7 @@ function compararChecklist(fichaAtual){
   ).pop();
   if(!anterior)return null;
   const alertas=[];
-  const labels={"radio":"Rádio PMERJ","giroflex":"Giroflex","sirene":"Sirene","estepe":"Estepe","macaco":"Macaco","triangulo":"Triângulo","chaveRoda":"Chave de Roda"};
+  const labels=CK_LABELS;
   Object.keys(labels).forEach(k=>{
     const ant=anterior.checklist[k]||"";
     const atu=fichaAtual.checklist[k]||"";
@@ -2285,8 +2631,10 @@ function copiarAssuncao(){
 }
 
 // ===== MODAL FICHA =====
-function abreModal(num,ctx){
+async function abreModal(num,ctx){
   fichaAtual=fichas.find(f=>f.num===num);if(!fichaAtual)return;
+  // Garante que as fotos (guardadas no IndexedDB) estejam carregadas antes de exibir.
+  if(!fichaAtual.fotos||!fichaAtual.fotos.length){const arr=await carregarFotosFicha(num);if(arr&&arr.length)fichaAtual.fotos=arr;}
   const f=fichaAtual;
   const vtrObj=vtrs.find(v=>v.prefixo.toUpperCase()===f.prefixo.toUpperCase());
   const diverg=vtrObj&&vtrObj.emprego&&f.setor!==vtrObj.emprego;
@@ -2346,7 +2694,7 @@ function mostrarAlertaChecklist(alerta,diverg,setorPadrao){
     f.prefixo.toUpperCase()===fichaAtual.prefixo.toUpperCase()&&
     f.num!==fichaAtual.num&&f.confirmado&&f.checklist
   ).pop();
-  const labels={"radio":"Rádio PMERJ","giroflex":"Giroflex","sirene":"Sirene","estepe":"Estepe","macaco":"Macaco","triangulo":"Triângulo","chaveRoda":"Chave de Roda"};
+  const labels=CK_LABELS;
   const sitLabel=v=>v==="OK"?"<span style='color:#2d6a1a;font-weight:700'>✅ OK</span>":v==="BX"?"<span style='color:#a32d2d;font-weight:700'>❌ PROBLEMA</span>":v==="NP"?"<span style='color:#888'>— NÃO POSSUI</span>":"<span style='color:#bbb'>—</span>";
   let comp=`<div style="border:1px solid #ffeeba;border-radius:8px;overflow:hidden">
     <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;background:#856404;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;padding:7px 10px">
@@ -3046,12 +3394,40 @@ function excluirFicha(num){
 }
 
 // ===== CONFIG =====
+function renderHorariosAdmin(){
+  const div=document.getElementById("cfg-horarios-list");
+  if(!div)return;
+  const setores=Object.keys(HORARIOS);
+  div.innerHTML=setores.map(s=>{
+    const turnos=(HORARIOS[s]||[]).map(h=>h.t).join(", ");
+    return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <label style="font-size:12px;font-weight:700;color:#1a3a6b;min-width:160px;flex-shrink:0">${s}</label>
+      <input type="text" value="${turnos}" data-setor="${s}"
+        style="flex:1;min-width:200px;border:1.5px solid #ccc;border-radius:6px;padding:7px 10px;font-size:12px;font-family:inherit"
+        placeholder="Ex: 05:00 às 17:00, 17:00 às 05:00">
+    </div>`;
+  }).join("");
+}
+
+function salvarHorarios(){
+  const inputs=document.getElementById("cfg-horarios-list")?.querySelectorAll("input")||[];
+  inputs.forEach(inp=>{
+    const setor=inp.dataset.setor;
+    const turnos=inp.value.split(",").map(t=>t.trim()).filter(t=>t).map(t=>({t}));
+    if(setor&&turnos.length) HORARIOS[setor]=turnos;
+  });
+  lss("pm_horarios",JSON.stringify(HORARIOS));
+  document.getElementById("hor-ok").style.display="block";
+  setTimeout(()=>document.getElementById("hor-ok").style.display="none",3000);
+}
+
 function loadCfg(){
   document.getElementById("cfg-url").value=SCRIPT_URL;document.getElementById("cfg-local").value=LOCAL_PAD;
   document.getElementById("sync-txt").textContent=SCRIPT_URL?"✅ URL configurado.":"⚠️ Dados salvos localmente.";
   const proxNum=ordemOfs+fichas.length+1;
   const el=document.getElementById("cfg-num-inicio");
   if(el) el.placeholder="Próxima: #"+String(proxNum).padStart(3,"0");
+  renderHorariosAdmin();
 }
 function saveCfg(){
   SCRIPT_URL=document.getElementById("cfg-url").value.trim();LOCAL_PAD=document.getElementById("cfg-local").value.trim();
@@ -3080,8 +3456,9 @@ async function testarConn(){
 }
 
 // ===== IMPRESSÃO =====
-function imprimirFicha(){
+async function imprimirFicha(){
   if(!fichaAtual)return;const f=fichaAtual;const dt=fmtD(f.data);
+  if(!f.fotos||!f.fotos.length){const arr=await carregarFotosFicha(f.num);if(arr&&arr.length)f.fotos=arr;}
   const BR="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png/250px-Bras%C3%A3o_da_Pol%C3%ADcia_Militar_do_Estado_do_Rio_de_Janeiro.png";
   const ckR=CK.map(it=>{const v=f.checklist?f.checklist[it.key]:"";const l=v==="OK"?"OK":v==="BX"?"PROBLEMA":v==="NP"?"NÃO POSSUI":"—";const c=v==="OK"?"#155724":v==="BX"?"#721c24":"#888";return`<tr><td style="padding:2px 5px;border-right:.5px solid #ddd">${it.label}</td><td style="padding:2px 5px;font-weight:700;color:${c}">${l}</td></tr>`;}).join("");
   const w=window.open("","_blank","width=950,height=750");
@@ -3184,7 +3561,7 @@ function imprimirFicha(){
   </div></div>
   <div class="pg"><div class="verso">
     <div class="vh"><div class="vht">PMERJ — FICHA Nº ${f.num} — VERSO · CHECKLIST E ALTERAÇÕES</div>
-    <div class="vhs">${f.grad} ${f.nome} · RG ${f.rg} · ${dt} · ${f.prefixo} — ${f.modelo||""} · ${f.setor||""}</div></div>
+    <div class="vhs">${f.grad} ${f.nome} · RG ${f.rg} · ${dt} · ${f.prefixo} — ${f.modelo||""} · ${f.setor||""}${f.horarioServico?" · ⏰ "+f.horarioServico:""}${f.guarnicao&&f.guarnicao.length?" · 👥 Guarnição RG: "+f.guarnicao.join(", "):""}</div></div>
     <div style="display:flex;gap:8px;margin-bottom:7px">
       <div class="vsec" style="flex:1"><div class="vsect">✅ Checklist</div><table class="cktbl"><thead><tr><th>Item</th><th>Estado</th></tr></thead><tbody>${ckR}</tbody></table></div>
       <div class="vsec" style="flex:2"><div class="vsect">🔍 Conf. Obrigatória: Água · Óleo · Limpeza</div><div class="vcont" style="color:#555">Motorista declarou ter verificado os níveis de água, óleo e limpeza antes de assumir o serviço.</div></div>
@@ -3201,6 +3578,26 @@ function imprimirFicha(){
   </div></div>
   <script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
 }
+
+// ===== MIGRAÇÃO ÚNICA + MANUTENÇÃO DE FUNDO =====
+(function(){
+  // Migração: corrige referência inexistente 54-9885 -> 54-9985 em instalações já existentes
+  try{
+    if(ls("pm_mig_2025_06b")!=="1"){
+      let mudou=false;
+      if(Array.isArray(distrib)){
+        distrib.forEach(d=>{ if(d.t==="54-9885"){d.t="54-9985";mudou=true;} if(d.r==="54-9885"){d.r="54-9985";mudou=true;} });
+      }
+      if(mudou) lss("pm_distrib",JSON.stringify(distrib));
+      lss("pm_mig_2025_06b","1");
+    }
+  }catch(_){}
+  // Reenvio automático de pendências a cada 60s e ao voltar a ter conexão
+  try{ atualizarBadgeFila(); }catch(_){}
+  setInterval(()=>{ if(navigator.onLine) flushSyncQueue(); }, 60000);
+  window.addEventListener("online", flushSyncQueue);
+})();
 </script>
+<div id="sync-float" onclick="flushSyncQueue()" title="Tocar para tentar enviar agora" style="display:none;align-items:center;gap:6px;position:fixed;bottom:14px;right:14px;z-index:9999;background:#856404;color:#fff;padding:9px 14px;border-radius:22px;font-size:12.5px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;max-width:80vw"></div>
 </body>
 </html>
